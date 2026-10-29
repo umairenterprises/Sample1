@@ -7,7 +7,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  .col-filter { min-width: 90px; }
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .col-filter { min-width: 80px; }
   .sortable:hover { background: #e2e8f0; cursor: pointer; }
   .sidebar-collapsed #sidebar { width: 64px; }
   .sidebar-collapsed #sidebar .nav-label,
@@ -15,21 +16,32 @@
   .sidebar-collapsed #main { margin-left: 64px; }
   #sidebar { transition: width .2s ease; }
   #main { transition: margin-left .2s ease; }
-  .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  
+  /* Modern Popup Overlay */
+  .popup-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .popup-overlay.show { opacity: 1; pointer-events: auto; }
-  .popup-box { transform: scale(0.8); transition: transform 0.3s; }
-  .popup-overlay.show .popup-box { transform: scale(1); }
-  .inp { width: 100%; padding: .5rem .75rem; border: 1px solid #cbd5e1; border-radius: .5rem; outline: none; font-size: .875rem; }
-  .inp:focus { box-shadow: 0 0 0 2px #93c5fd; border-color: #3b82f6; }
-  .nav-item.active { background: #1d4ed8; color: #fff; }
-  .dd-tab { padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; font-size: 0.875rem; border: 1px solid transparent; border-bottom: none; }
-  .dd-tab.active { background: white; border-color: #e2e8f0; color: #1d4ed8; }
+  
+  /* Circular Check Animation */
+  .checkmark-circle { width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top; }
+  .checkmark-circle .background { width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute; }
+  .checkmark-circle .checkmark { position: absolute; display: block; width: 40px; height: 20px; border-left: 4px solid white; border-bottom: 4px solid white; transform: rotate(-45deg); left: 20px; top: 25px; }
+  .checkmark-circle .checkmark.draw:after { animation: checkmark 0.6s ease-in-out both; }
+  
+  @keyframes checkmark { 0% { height: 0; width: 0; opacity: 0; } 40% { height: 0; width: 20px; opacity: 1; } 100% { height: 20px; width: 40px; } }
+  
+  .inp { width: 100%; padding: .5rem .75rem; border: 1px solid #cbd5e1; border-radius: .5rem; outline: none; font-size: .875rem; transition: border 0.2s; }
+  .inp:focus { box-shadow: 0 0 0 2px #bfdbfe; border-color: #3b82f6; }
+  .nav-item.active { background: #2563eb; color: #fff; }
+  
+  /* Dropdown Tabs */
+  .dd-tab { padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; font-size: 0.875rem; border: 1px solid transparent; border-bottom: none; color: #475569; }
+  .dd-tab.active { background: white; border-color: #e2e8f0; color: #2563eb; font-weight: 600; }
 </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
 
 <!-- LOGIN MODAL -->
-<div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
+<div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4 backdrop-blur-sm">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
     <div class="text-center mb-6">
       <h1 class="text-2xl font-bold text-slate-800">District Account ERP</h1>
@@ -44,7 +56,11 @@
         <label class="block text-sm font-medium mb-1">Password</label>
         <div class="relative">
           <input id="loginPass" type="password" required class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <button type="button" id="togglePass" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-lg">👁️</button>
+          <button type="button" id="togglePass" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none">
+            <!-- Professional SVG Eye Icon -->
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg id="eyeSlashIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
         </div>
       </div>
       <label class="flex items-center gap-2 text-sm text-slate-600">
@@ -57,102 +73,134 @@
 </div>
 
 <!-- APP SHELL -->
-<div id="app" class="hidden min-h-screen">
-  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-slate-800 text-slate-200 flex flex-col z-30">
+<div id="app" class="hidden min-h-screen flex flex-col">
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-slate-800 text-slate-200 flex flex-col z-30 shadow-xl">
     <div class="flex items-center justify-between px-4 h-16 border-b border-slate-700">
       <span class="brand-text font-bold text-white text-sm leading-tight">District<br/>Account ERP</span>
-      <button id="collapseBtn" class="text-slate-400 hover:text-white text-lg" title="Collapse">◄</button>
+      <button id="collapseBtn" class="text-slate-400 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
     </div>
     <nav class="flex-1 py-4 space-y-1 text-sm">
-      <button data-nav="entry" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700 text-left">
-        <span>🧾</span><span class="nav-label">New Entry</span>
+      <button data-nav="entry" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span class="nav-label">New Entry</span>
       </button>
-      <button data-nav="records" class="nav-item w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700 text-left">
-        <span>📋</span><span class="nav-label">View Records</span>
+      <button data-nav="records" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        <span class="nav-label">View Records</span>
       </button>
-      <button data-nav="dropdowns" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700 text-left">
-        <span>⚙️</span><span class="nav-label">Manage Dropdowns</span>
+      <button data-nav="dropdowns" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span class="nav-label">Manage Dropdowns</span>
       </button>
-      <button data-nav="settings" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-700 text-left">
-        <span>👁️</span><span class="nav-label">View Settings</span>
+      <button data-nav="settings" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <span class="nav-label">View Settings</span>
       </button>
     </nav>
-    <div class="p-4 border-t border-slate-700 text-xs text-slate-400 space-y-2">
-      <div id="syncStatus">🟢 Online</div>
-      <button id="refreshDataBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded py-1.5 font-semibold">🔄 Refresh Data</button>
-      <button id="manualSync" class="w-full bg-slate-700 hover:bg-slate-600 text-white rounded py-1.5">Sync Queue <span id="queueCount"></span></button>
+    
+    <div class="p-4 border-t border-slate-700 text-xs text-slate-400 space-y-3">
+      <div id="syncStatus" class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div> Online</div>
+      <button id="refreshDataBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2 font-semibold transition flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Refresh Data
+      </button>
+      <button id="manualSync" class="w-full bg-slate-700 hover:bg-slate-600 text-white rounded-lg py-2 transition flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.13-5.88L21 8"></path></svg>
+        Sync <span id="queueCount"></span>
+      </button>
     </div>
   </aside>
 
+  <!-- MAIN CONTENT -->
   <div id="main" class="ml-64 min-h-screen flex flex-col">
-    <header class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-20">
+    <header class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-20 shadow-sm">
       <div class="flex items-center gap-3">
         <button id="mobileMenu" class="md:hidden text-2xl">☰</button>
         <div>
-          <h2 class="font-bold text-slate-800">District Account ERP</h2>
-          <p class="text-xs text-slate-500">Powered by Umair Sajid</p>
+          <h2 class="font-bold text-slate-800 text-lg">District Account ERP</h2>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="roleBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">User</span>
-        <span id="userName" class="text-sm text-slate-600 hidden sm:inline"></span>
-        <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800 font-medium">Logout</button>
+      <div class="flex items-center gap-4">
+        <span id="roleBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Admin</span>
+        <span id="userName" class="text-sm font-medium text-slate-700 hidden sm:inline"></span>
+        <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800 font-medium transition">Logout</button>
       </div>
     </header>
 
     <main class="flex-1 p-4 md:p-6">
       <!-- NEW ENTRY -->
       <section id="view-entry" class="view hidden">
-        <h2 class="text-xl font-bold mb-4">Receipt Voucher Entry</h2>
-        <form id="entryForm" class="bg-white rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label class="text-xs font-medium">Date *</label><input name="date" type="date" required class="inp" /></div>
-          <div><label class="text-xs font-medium">Book No *</label><input name="bookNo" required class="inp" /></div>
-          <div class="relative"><label class="text-xs font-medium">Receipt No *</label>
+        <h2 class="text-xl font-bold mb-4 text-slate-800">Receipt Voucher Entry</h2>
+        <form id="entryForm" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Date *</label><input name="date" type="date" required class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Book No *</label><input name="bookNo" required class="inp" /></div>
+          <div class="relative"><label class="text-xs font-semibold text-slate-600 mb-1 block">Receipt No *</label>
             <input name="receiptNo" id="receiptNo" required class="inp" />
-            <p id="dupErr" class="hidden text-xs text-red-600 mt-1">Receipt No already exists!</p></div>
+            <p id="dupErr" class="hidden text-xs text-red-600 mt-1 font-medium">Receipt No already exists!</p></div>
 
-          <div><label class="text-xs font-medium">Amount Type *</label><div data-dropdown="amountType"></div></div>
-          <div><label class="text-xs font-medium">Head Department *</label><div data-dropdown="headDept"></div></div>
-          <div><label class="text-xs font-medium">Sub-Head *</label><div data-dropdown="subHead"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Amount Type *</label><div data-dropdown="amountType"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Head Department *</label><div data-dropdown="headDept"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Sub-Head *</label><div data-dropdown="subHead"></div></div>
 
-          <div><label class="text-xs font-medium">City *</label><div data-dropdown="city"></div></div>
-          <div><label class="text-xs font-medium">Donor Name *</label><div data-dropdown="donorName" id="donorDD"></div></div>
-          <div><label class="text-xs font-medium">Amount (PKR) *</label><input name="amount" type="number" step="0.01" required class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">City *</label><div data-dropdown="city"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Donor Name *</label><div data-dropdown="donorName" id="donorDD"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Amount (PKR) *</label><input name="amount" type="number" step="0.01" required class="inp" /></div>
 
-          <div><label class="text-xs font-medium">Donor Mobile</label><input name="mobile" class="inp" /></div>
-          <div><label class="text-xs font-medium">Email</label><input name="email" type="email" class="inp" /></div>
-          <div><label class="text-xs font-medium">Reference C/o</label><div data-dropdown="reference" id="refDD"></div></div>
-          <div><label class="text-xs font-medium">Reference Mobile</label><input name="refMobile" class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Donor Mobile</label><input name="mobile" id="mobileInput" class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Email</label><input name="email" id="emailInput" type="email" class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Reference C/o</label><div data-dropdown="reference" id="refDD"></div></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Reference Mobile</label><input name="refMobile" id="refMobileInput" class="inp" /></div>
 
-          <div class="md:col-span-3 flex justify-end gap-3 mt-2">
-            <button type="reset" class="px-4 py-2 rounded-lg border hover:bg-slate-50">Reset</button>
-            <button type="submit" id="saveBtn" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">Save Voucher Entry</button>
+          <div class="md:col-span-3 flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
+            <button type="reset" class="px-5 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition">Reset Form</button>
+            <button type="submit" id="saveBtn" class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">Save Voucher Entry</button>
           </div>
         </form>
       </section>
 
       <!-- VIEW RECORDS -->
       <section id="view-records" class="view hidden">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 class="text-xl font-bold">View Records</h2>
-          <div class="flex gap-2">
-            <button id="exportExcel" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold">⬇ Excel</button>
-            <button id="exportPdf" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold">🖨 PDF / Print</button>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <h2 class="text-xl font-bold text-slate-800">View Records</h2>
+          
+          <!-- DATE FILTER & EXPORT -->
+          <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+            <span class="text-xs font-semibold text-slate-500 uppercase px-2">Date Range:</span>
+            <input type="date" id="filterStartDate" class="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500" title="Start Date">
+            <span class="text-slate-400">to</span>
+            <input type="date" id="filterEndDate" class="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500" title="End Date">
+            <button id="clearDateFilter" class="text-xs text-red-500 hover:underline px-1">Clear</button>
+            <div class="h-6 w-px bg-slate-300 mx-1"></div>
+            <button id="exportExcel" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded text-sm font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Excel</button>
+            <button id="exportPdf" class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 rounded text-sm font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> PDF</button>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow overflow-x-auto">
-          <table class="w-full text-sm" id="recordsTable">
-            <thead id="recordsHead" class="bg-slate-50 text-slate-700"></thead>
-            <tbody id="recordsBody"></tbody>
-          </table>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap" id="recordsTable">
+              <thead id="recordsHead" class="bg-slate-50 text-slate-700 border-b border-slate-200"></thead>
+              <tbody id="recordsBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          
+          <!-- PAGINATION -->
+          <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <span id="recordsMeta" class="text-xs text-slate-500 font-medium"></span>
+            <div class="flex items-center gap-1">
+              <button id="prevPage" class="px-3 py-1.5 border border-slate-300 rounded bg-white hover:bg-slate-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+              <span id="pageInfo" class="text-sm font-medium text-slate-700 px-3">Page 1</span>
+              <button id="nextPage" class="px-3 py-1.5 border border-slate-300 rounded bg-white hover:bg-slate-50 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+            </div>
+          </div>
         </div>
-        <p id="recordsMeta" class="text-xs text-slate-500 mt-2"></p>
       </section>
 
       <!-- MANAGE DROPDOWNS -->
       <section id="view-dropdowns" class="view hidden">
-        <h2 class="text-xl font-bold mb-4">Manage Dropdowns</h2>
-        <div class="bg-white rounded-xl shadow border border-slate-200">
+        <h2 class="text-xl font-bold mb-4 text-slate-800">Manage Dropdowns</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
           <!-- Tabs -->
           <div class="flex overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 pt-2 gap-1">
             <div class="dd-tab active" data-cat="donorName">Donor Name</div>
@@ -165,20 +213,20 @@
           
           <div class="p-4">
             <div class="flex flex-wrap gap-2 mb-4">
-              <input id="ddSearch" placeholder="Search…" class="inp max-w-xs" />
-              <button id="ddSort" class="px-3 py-2 border rounded-lg text-sm bg-white">Sort A-Z ▲</button>
+              <input id="ddSearch" placeholder="Search..." class="inp max-w-xs" />
+              <button id="ddSort" class="px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white hover:bg-slate-50 transition">Sort A-Z ▲</button>
               <div class="flex-1"></div>
               <input id="ddNew" placeholder="Add new option..." class="inp max-w-xs" />
-              <button id="ddAdd" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Add</button>
+              <button id="ddAdd" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">Add</button>
             </div>
             
-            <div class="overflow-x-auto border rounded-lg">
+            <div class="overflow-x-auto border border-slate-200 rounded-lg">
               <table class="w-full text-sm text-left">
-                <thead class="bg-slate-100 text-slate-700 border-b">
+                <thead class="bg-slate-100 text-slate-700 border-b border-slate-200">
                   <tr>
-                    <th class="px-4 py-2 w-16">S.No</th>
-                    <th class="px-4 py-2">Value</th>
-                    <th class="px-4 py-2 w-24 text-right">Actions</th>
+                    <th class="px-4 py-2 w-16 font-semibold">S.No</th>
+                    <th class="px-4 py-2 font-semibold">Value</th>
+                    <th class="px-4 py-2 w-32 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="ddGridBody" class="divide-y divide-slate-100"></tbody>
@@ -190,10 +238,10 @@
 
       <!-- VIEW SETTINGS -->
       <section id="view-settings" class="view hidden">
-        <h2 class="text-xl font-bold mb-4">Column Visibility Settings</h2>
-        <div class="bg-white rounded-xl shadow p-6">
-          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records. Export always includes all fields.</p>
-          <div id="colToggles" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+        <h2 class="text-xl font-bold mb-4 text-slate-800">Column Visibility Settings</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records and PDF Export. (Excel always includes all fields).</p>
+          <div id="colToggles" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
         </div>
       </section>
     </main>
@@ -201,28 +249,31 @@
 </div>
 
 <!-- EDIT MODAL -->
-<div id="editModal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-    <h3 class="text-lg font-bold mb-4">Edit Voucher</h3>
-    <form id="editForm" class="grid grid-cols-1 md:grid-cols-2 gap-3"></form>
-    <div class="flex justify-end gap-2 mt-4">
-      <button id="editCancel" class="px-4 py-2 border rounded-lg">Cancel</button>
-      <button id="editSave" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Save Changes</button>
+<div id="editModal" class="hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto transform transition-all">
+    <h3 class="text-lg font-bold mb-4 text-slate-800">Edit Voucher Record</h3>
+    <form id="editForm" class="grid grid-cols-1 md:grid-cols-2 gap-4"></form>
+    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+      <button id="editCancel" class="px-5 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium transition">Cancel</button>
+      <button id="editSave" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition">Save Changes</button>
     </div>
   </div>
 </div>
 
-<!-- GOOD JOB POPUP -->
-<div id="goodJobPopup" class="popup-overlay">
-  <div class="popup-box bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
-    <div class="text-5xl mb-4">🎉</div>
-    <h3 class="text-2xl font-bold text-slate-800 mb-1">Good Job!</h3>
+<!-- MODERN SUCCESS POPUP -->
+<div id="successPopup" class="popup-overlay">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm w-full mx-4 transform scale-90 transition-transform duration-300" id="popupBox">
+    <div class="checkmark-circle mx-auto mb-4">
+      <div class="background"></div>
+      <div class="checkmark draw"></div>
+    </div>
+    <h3 class="text-xl font-bold text-slate-800 mb-1">Success!</h3>
     <p id="popupMsg" class="text-slate-500 text-sm">Action completed successfully.</p>
   </div>
 </div>
 
 <!-- TOAST -->
-<div id="toastBox" class="fixed top-4 right-4 z-50 space-y-2"></div>
+<div id="toastBox" class="fixed top-4 right-4 z-[110] space-y-2"></div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbza1jbPSrpVhCFpegVPeHu-cngjtxmk-eEfUnsOIVvJd6u43XKrhq0BgpCXv8eNots-/exec";
@@ -252,25 +303,49 @@ const DROPDOWN_LABELS = {
 const state = {
   user: null, data: [], dropdowns: {}, donorRefMap: {},
   columns: {}, sort: { key: "date", dir: "desc" },
-  colFilters: {}, editingId: null, online: navigator.onLine, activeDDTab: "donorName", ddSortAsc: true
+  colFilters: {}, editingId: null, online: navigator.onLine, 
+  activeDDTab: "donorName", ddSortAsc: true,
+  // Pagination State
+  currentPage: 1, itemsPerPage: 25,
+  // Date Filter State
+  filterStartDate: "", filterEndDate: ""
 };
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
+// Date Formatter DD/MM/YYYY
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const parts = String(dateStr).split("-");
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; // yyyy-mm-dd to dd/mm/yyyy
+  return dateStr;
+}
+
 function toast(msg, kind = "info") {
   const colors = { info: "bg-slate-800", success: "bg-emerald-600", error: "bg-red-600", warn: "bg-amber-500" };
   const el = document.createElement("div");
-  el.className = `${colors[kind]} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm max-w-xs toast`;
+  el.className = `${colors[kind]} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm max-w-xs toast transition-all`;
   el.textContent = msg;
   $("#toastBox").appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
 }
 
-function showGoodJob(msg = "Action completed successfully.") {
+function showSuccessPopup(msg = "Action completed successfully.") {
   $("#popupMsg").textContent = msg;
-  $("#goodJobPopup").classList.add("show");
-  setTimeout(() => { $("#goodJobPopup").classList.remove("show"); }, 2000);
+  const overlay = $("#successPopup"), box = $("#popupBox");
+  overlay.classList.add("show");
+  box.classList.remove("scale-90"); box.classList.add("scale-100");
+  
+  const check = overlay.querySelector(".checkmark");
+  check.classList.remove("draw");
+  void check.offsetWidth; // Trigger reflow to restart animation
+  check.classList.add("draw");
+
+  setTimeout(() => { 
+    overlay.classList.remove("show"); 
+    box.classList.remove("scale-100"); box.classList.add("scale-90");
+  }, 2200);
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -282,7 +357,7 @@ function loadColumns() {
     const saved = JSON.parse(localStorage.getItem(LS.columns));
     const out = {};
     FIELDS.forEach(f => out[f.key] = saved ? (saved[f.key] !== false) : true);
-    out.receiptNo = true;
+    out.receiptNo = true; // Locked
     return out;
   } catch { return Object.fromEntries(FIELDS.map(f => [f.key, true])); }
 }
@@ -313,15 +388,22 @@ async function safePost(payload) {
   try { const r = await apiPost(payload); return r.ok ? r : null; } catch { return null; }
 }
 
-/* ================== AUTH & BOOTSTRAP ================== */
+/* ================== AUTH ================== */
 function initLogin() {
   const saved = localStorage.getItem(LS.session);
   if (saved) { try { state.user = JSON.parse(saved); startApp(); return; } catch {} }
   $("#loginModal").classList.remove("hidden");
+  
   $("#togglePass").addEventListener("click", () => {
-    const inp = $("#loginPass"); inp.type = inp.type === "password" ? "text" : "password";
-    $("#togglePass").textContent = inp.type === "password" ? "👁️" : "🙈";
+    const inp = $("#loginPass");
+    const eye = $("#eyeIcon"), eyeSlash = $("#eyeSlashIcon");
+    if (inp.type === "password") {
+      inp.type = "text"; eye.classList.add("hidden"); eyeSlash.classList.remove("hidden");
+    } else {
+      inp.type = "password"; eye.classList.remove("hidden"); eyeSlash.classList.add("hidden");
+    }
   });
+
   $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const user = $("#loginUser").value.trim(), pass = $("#loginPass").value, err = $("#loginError");
@@ -355,7 +437,7 @@ function startApp() {
   
   state.columns = loadColumns();
   updateQueueBadge(); updateOnlineStatus(); renderColumnToggles();
-  fetchData(true); // Fetch fresh data on load
+  fetchData(true);
   setupNav(); setupEntryForm(); setupRecords(); setupDropdownManager(); setupSettings(); setupSidebar(); setupExport();
   setInterval(() => { if (state.online) flushQueue(); }, 15000);
 }
@@ -367,15 +449,26 @@ async function fetchData(showToast = false) {
       state.data = res.data || [];
       state.dropdowns = res.dropdowns || {};
       
-      // Build Donor -> Reference Map
+      // Build Master Auto-Fill Map
       state.donorRefMap = {};
       const dnList = state.dropdowns.donorName || [];
       const refList = state.dropdowns.reference || [];
-      dnList.forEach((dn, i) => { if(refList[i]) state.donorRefMap[dn] = refList[i]; });
+      const mobList = state.dropdowns.mobile || [];
+      const emlList = state.dropdowns.email || [];
+      const refMobList = state.dropdowns.refMobile || [];
+
+      dnList.forEach((dn, i) => { 
+        state.donorRefMap[dn] = {
+          reference: refList[i] || "",
+          mobile: mobList[i] || "",
+          email: emlList[i] || "",
+          refMobile: refMobList[i] || ""
+        };
+      });
 
       localStorage.setItem("daerp_users_cache", JSON.stringify(res.users || []));
       renderAll();
-      if (showToast) toast("Data refreshed from Google Sheet", "success");
+      if (showToast) toast("Data refreshed successfully", "success");
     }
   } catch (e) {
     toast("Offline mode — using cached data", "warn");
@@ -405,10 +498,10 @@ async function flushQueue() {
     try { const res = await apiPost(op); if (!res.ok) remain.push(op); } catch { remain.push(op); }
   }
   setQueue(remain);
-  if (!remain.length) toast("All pending changes synced ✓", "success");
+  if (!remain.length) toast("All changes synced to server", "success");
 }
 
-/* ================== NAV & SIDEBAR ================== */
+/* ================== NAV ================== */
 function setupNav() {
   $$(".nav-item").forEach(btn => btn.addEventListener("click", () => {
     $$(".nav-item").forEach(b => b.classList.remove("active")); btn.classList.add("active");
@@ -419,32 +512,46 @@ function setupNav() {
   $('[data-nav="entry"]').click();
   $("#logoutBtn").addEventListener("click", () => { localStorage.removeItem(LS.session); sessionStorage.removeItem(LS.session); location.reload(); });
 }
+
 function setupSidebar() {
   $("#collapseBtn").addEventListener("click", () => {
     document.body.classList.toggle("sidebar-collapsed");
-    $("#collapseBtn").textContent = document.body.classList.contains("sidebar-collapsed") ? "►" : "◄";
   });
   $("#mobileMenu").addEventListener("click", () => {
     const s = $("#sidebar"); s.classList.toggle("translate-x-0"); s.classList.toggle("-translate-x-full");
   });
-  $("#manualSync").addEventListener("click", () => { if (state.online) flushQueue(); else toast("Offline — cannot sync", "warn"); });
-  $("#refreshDataBtn").addEventListener("click", () => fetchData(true));
+  $("#manualSync").addEventListener("click", () => { 
+    if (state.online) {
+      $("#manualSync").innerHTML = `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...`;
+      flushQueue().then(() => {
+        $("#manualSync").innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.13-5.88L21 8"></path></svg> Sync <span id="queueCount"></span>`;
+        updateQueueBadge();
+      });
+    } else toast("Offline — cannot sync", "warn"); 
+  });
+  $("#refreshDataBtn").addEventListener("click", () => {
+    $("#refreshDataBtn").innerHTML = `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Refreshing...`;
+    fetchData(true).then(() => {
+      $("#refreshDataBtn").innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Refresh Data`;
+    });
+  });
 }
 function updateOnlineStatus() {
-  state.online = navigator.onLine; $("#syncStatus").textContent = state.online ? "🟢 Online" : "🔴 Offline";
+  state.online = navigator.onLine; 
+  $("#syncStatus").innerHTML = state.online ? `<div class="w-2 h-2 rounded-full bg-green-500"></div> Online` : `<div class="w-2 h-2 rounded-full bg-red-500"></div> Offline`;
 }
 window.addEventListener("online", () => { updateOnlineStatus(); flushQueue(); });
 window.addEventListener("offline", updateOnlineStatus);
 
-/* ================== DROPDOWN COMPONENT ================== */
+/* ================== DROPDOWNS (ENTRY FORM) ================== */
 function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
   container.innerHTML = "";
   const wrap = document.createElement("div"); wrap.className = "relative";
   const input = document.createElement("input");
-  input.className = "inp"; input.placeholder = `Search ${DROPDOWN_LABELS[key] || key}…`;
+  input.className = "inp"; input.placeholder = `Search ${DROPDOWN_LABELS[key] || key}...`;
   input.autocomplete = "off"; input.value = value;
   const panel = document.createElement("div");
-  panel.className = "absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-56 overflow-y-auto hidden";
+  panel.className = "absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl max-h-56 overflow-y-auto hidden";
 
   const renderOpts = (filter = "") => {
     const f = filter.toLowerCase();
@@ -453,7 +560,7 @@ function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
     if (!list.length) { panel.innerHTML = `<div class="px-3 py-2 text-sm text-slate-400">No matches</div>`; return; }
     list.forEach((o, i) => {
       const el = document.createElement("div");
-      el.className = "px-3 py-2 text-sm hover:bg-slate-100 cursor-pointer" + (i === 0 ? " active" : "");
+      el.className = "px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer transition" + (i === 0 ? " bg-blue-50 text-blue-700 font-medium" : "");
       el.textContent = o;
       el.addEventListener("mousedown", (e) => {
         e.preventDefault(); input.value = o; panel.classList.add("hidden");
@@ -469,7 +576,7 @@ function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Escape") panel.classList.add("hidden");
     if (e.key === "Enter" && !panel.classList.contains("hidden")) {
-      const first = panel.querySelector(".active, div.cursor-pointer");
+      const first = panel.querySelector(".bg-blue-50");
       if (first) { input.value = first.textContent; input.dispatchEvent(new Event("change", { bubbles: true })); panel.classList.add("hidden"); }
       e.preventDefault();
     }
@@ -479,19 +586,21 @@ function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
   input.dataset.dropdownKey = key;
 }
 
-/* ================== NEW ENTRY ================== */
 function setupEntryForm() {
   refreshEntryDropdowns();
   $("#receiptNo").addEventListener("input", checkDuplicate);
 
-  // Auto-fill Reference C/o when Donor Name is selected
+  // Master Auto-Fill Logic
   $("#donorDD").addEventListener("change", (e) => {
     if (e.target.tagName === "INPUT") {
       const selectedDonor = e.target.value;
-      const refInput = $("#refDD input");
-      if (state.donorRefMap[selectedDonor] && refInput) {
-        refInput.value = state.donorRefMap[selectedDonor];
-        refInput.dispatchEvent(new Event("change", { bubbles: true }));
+      const mapData = state.donorRefMap[selectedDonor];
+      if (mapData) {
+        const refInput = $("#refDD input");
+        if (refInput) { refInput.value = mapData.reference; refInput.dispatchEvent(new Event("change", { bubbles: true })); }
+        $("#mobileInput").value = mapData.mobile;
+        $("#emailInput").value = mapData.email;
+        $("#refMobileInput").value = mapData.refMobile;
       }
     }
   });
@@ -503,7 +612,6 @@ function setupEntryForm() {
     const rec = {};
     FIELDS.forEach(f => rec[f.key] = (fd.get(f.key) || "").toString().trim());
     
-    // Fallback for custom dropdown inputs
     $$("[data-dropdown]").forEach(el => {
       const inp = el.querySelector("input");
       if(inp) rec[inp.dataset.dropdownKey] = inp.value.trim();
@@ -513,22 +621,17 @@ function setupEntryForm() {
     rec._id = uid(); rec._synced = state.online;
     if (!rec.date) rec.date = todayISO();
 
-    // Instantly add to table (No wait!)
     state.data.unshift(rec); cacheData(); renderRecords();
     
-    // Reset form instantly
     e.target.reset();
     $$("[data-dropdown] input").forEach(inp => inp.value = "");
     $("#dupErr").classList.add("hidden"); $("#saveBtn").disabled = false;
     
-    showGoodJob("Voucher saved successfully!");
+    showSuccessPopup("Voucher saved successfully!");
 
-    // Send to Google Sheet in background
     const payload = { action: "add", record: rec };
     if (state.online) {
-      safePost(payload).then(res => {
-         if(!res) enqueue(payload);
-      });
+      safePost(payload).then(res => { if(!res) enqueue(payload); });
     } else {
       enqueue(payload); toast("Offline — queued for sync", "warn");
     }
@@ -549,7 +652,7 @@ function checkDuplicate() {
   return !!dup;
 }
 
-/* ================== VIEW RECORDS ================== */
+/* ================== VIEW RECORDS & PAGINATION ================== */
 function setupRecords() {
   $("#recordsHead").addEventListener("click", (e) => {
     const th = e.target.closest("th[data-sort]"); if (!th) return;
@@ -558,14 +661,36 @@ function setupRecords() {
     else { state.sort.key = key; state.sort.dir = "asc"; }
     renderRecords();
   });
+
+  $("#filterStartDate").addEventListener("change", (e) => { state.filterStartDate = e.target.value; state.currentPage = 1; renderRecords(); });
+  $("#filterEndDate").addEventListener("change", (e) => { state.filterEndDate = e.target.value; state.currentPage = 1; renderRecords(); });
+  $("#clearDateFilter").addEventListener("click", () => {
+    state.filterStartDate = ""; state.filterEndDate = "";
+    $("#filterStartDate").value = ""; $("#filterEndDate").value = "";
+    state.currentPage = 1; renderRecords();
+  });
+
+  $("#prevPage").addEventListener("click", () => { if (state.currentPage > 1) { state.currentPage--; renderRecordsBodyOnly(); } });
+  $("#nextPage").addEventListener("click", () => { 
+    const totalPages = Math.ceil(getFilteredData().length / state.itemsPerPage);
+    if (state.currentPage < totalPages) { state.currentPage++; renderRecordsBodyOnly(); } 
+  });
 }
+
 function getFilteredData() {
   const f = state.colFilters;
-  return state.data.filter(r => Object.entries(f).every(([k, v]) => {
-    if (!v) return true;
-    return String(r[k] ?? "").toLowerCase().includes(v.toLowerCase());
-  }));
+  return state.data.filter(r => {
+    // Date Range Filter
+    if (state.filterStartDate && r.date < state.filterStartDate) return false;
+    if (state.filterEndDate && r.date > state.filterEndDate) return false;
+    // Column Filters
+    return Object.entries(f).every(([k, v]) => {
+      if (!v) return true;
+      return String(r[k] ?? "").toLowerCase().includes(v.toLowerCase());
+    });
+  });
 }
+
 function renderRecords() {
   const head = $("#recordsHead"), visibleFields = FIELDS.filter(f => state.columns[f.key]);
   const activeFilterKey = document.activeElement?.dataset?.filterKey;
@@ -575,22 +700,22 @@ function renderRecords() {
   const trH = document.createElement("tr");
   visibleFields.forEach(f => {
     const th = document.createElement("th");
-    th.className = "px-3 py-2 text-left font-semibold border-b sortable select-none";
+    th.className = "px-3 py-3 text-left font-semibold border-b sortable select-none text-slate-700";
     th.dataset.sort = f.key;
     const arrow = state.sort.key === f.key ? (state.sort.dir === "asc" ? " ▲" : " ▼") : "";
     th.textContent = f.label + arrow;
     trH.appendChild(th);
   });
-  if (state.user.role === "Admin") { const th = document.createElement("th"); th.className = "px-3 py-2 text-left font-semibold border-b"; th.textContent = "Actions"; trH.appendChild(th); }
+  if (state.user.role === "Admin") { const th = document.createElement("th"); th.className = "px-3 py-3 text-left font-semibold border-b text-slate-700"; th.textContent = "Actions"; trH.appendChild(th); }
   head.appendChild(trH);
 
-  const trF = document.createElement("tr"); trF.className = "bg-slate-50";
+  const trF = document.createElement("tr"); trF.className = "bg-slate-50/50";
   visibleFields.forEach(f => {
-    const td = document.createElement("td"); td.className = "px-2 py-1 border-b";
+    const td = document.createElement("td"); td.className = "px-2 py-1.5 border-b";
     const inp = document.createElement("input");
-    inp.className = "col-filter w-full text-xs border rounded px-2 py-1"; inp.placeholder = "Filter…";
+    inp.className = "col-filter w-full text-xs border border-slate-300 rounded px-2 py-1 focus:border-blue-500 focus:outline-none bg-white"; inp.placeholder = "Filter...";
     inp.dataset.filterKey = f.key; inp.value = state.colFilters[f.key] || "";
-    inp.addEventListener("input", () => { state.colFilters[f.key] = inp.value; renderRecordsBodyOnly(); });
+    inp.addEventListener("input", () => { state.colFilters[f.key] = inp.value; state.currentPage = 1; renderRecordsBodyOnly(); });
     td.appendChild(inp); trF.appendChild(td);
   });
   if (state.user.role === "Admin") trF.appendChild(document.createElement("td"));
@@ -603,9 +728,10 @@ function renderRecords() {
     if (el) { el.focus(); try { el.setSelectionRange(selStart, selStart); } catch {} }
   }
 }
+
 function renderRecordsBodyOnly() {
   const body = $("#recordsBody"), visibleFields = FIELDS.filter(f => state.columns[f.key]);
-  const rows = getFilteredData().slice().sort((a, b) => {
+  const allRows = getFilteredData().slice().sort((a, b) => {
     const k = state.sort.key; let va = a[k], vb = b[k];
     if (k === "amount") { va = +va || 0; vb = +vb || 0; }
     else { va = String(va ?? "").toLowerCase(); vb = String(vb ?? "").toLowerCase(); }
@@ -613,30 +739,53 @@ function renderRecordsBodyOnly() {
     if (va > vb) return state.sort.dir === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Pagination logic
+  const total = allRows.length;
+  const totalPages = Math.ceil(total / state.itemsPerPage) || 1;
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  
+  const startIdx = (state.currentPage - 1) * state.itemsPerPage;
+  const paginatedRows = allRows.slice(startIdx, startIdx + state.itemsPerPage);
+
   body.innerHTML = "";
-  rows.forEach(r => {
-    const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50";
-    visibleFields.forEach(f => {
-      const td = document.createElement("td"); td.className = "px-3 py-2 border-b text-slate-700 whitespace-nowrap";
-      td.textContent = r[f.key] ?? ""; tr.appendChild(td);
+  if (!paginatedRows.length) {
+    body.innerHTML = `<tr><td colspan="${visibleFields.length + 1}" class="text-center py-8 text-slate-400">No records found.</td></tr>`;
+  } else {
+    paginatedRows.forEach(r => {
+      const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50 transition-colors";
+      visibleFields.forEach(f => {
+        const td = document.createElement("td"); td.className = "px-3 py-2.5 border-b border-slate-100 text-slate-700";
+        if (f.type === "date") td.textContent = formatDate(r[f.key]);
+        else td.textContent = r[f.key] ?? ""; 
+        tr.appendChild(td);
+      });
+      if (state.user.role === "Admin") {
+        const td = document.createElement("td"); td.className = "px-3 py-2.5 border-b border-slate-100 whitespace-nowrap";
+        const edit = document.createElement("button"); edit.className = "text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium mr-3"; edit.textContent = "Edit"; edit.onclick = () => openEdit(r);
+        const del = document.createElement("button"); del.className = "text-red-600 hover:text-red-800 hover:underline text-xs font-medium"; del.textContent = "Delete"; del.onclick = () => deleteRecord(r);
+        td.appendChild(edit); td.appendChild(del); tr.appendChild(td);
+      }
+      body.appendChild(tr);
     });
-    if (state.user.role === "Admin") {
-      const td = document.createElement("td"); td.className = "px-3 py-2 border-b whitespace-nowrap";
-      const edit = document.createElement("button"); edit.className = "text-blue-600 hover:underline text-xs mr-3"; edit.textContent = "Edit"; edit.onclick = () => openEdit(r);
-      const del = document.createElement("button"); del.className = "text-red-600 hover:underline text-xs"; del.textContent = "Delete"; del.onclick = () => deleteRecord(r);
-      td.appendChild(edit); td.appendChild(del); tr.appendChild(td);
-    }
-    body.appendChild(tr);
-  });
-  $("#recordsMeta").textContent = `${rows.length} of ${state.data.length} records`;
+  }
+
+  // Update Pagination UI
+  $("#recordsMeta").textContent = `Showing ${total === 0 ? 0 : startIdx + 1} to ${Math.min(startIdx + state.itemsPerPage, total)} of ${total} records`;
+  $("#pageInfo").textContent = `Page ${state.currentPage} of ${totalPages}`;
+  $("#prevPage").prop("disabled", state.currentPage === 1);
+  $("#nextPage").prop("disabled", state.currentPage === totalPages);
 }
+
+// jQuery-less prop helper
+Element.prototype.prop = function(prop, val) { if(val !== undefined) this[prop] = val; return this[prop]; };
 
 function openEdit(rec) {
   state.editingId = rec._id;
   const form = $("#editForm"); form.innerHTML = "";
   FIELDS.forEach(f => {
     const div = document.createElement("div"); const label = document.createElement("label");
-    label.className = "text-xs font-medium"; label.textContent = f.label; div.appendChild(label);
+    label.className = "text-xs font-semibold text-slate-600 mb-1 block"; label.textContent = f.label; div.appendChild(label);
     if (f.type === "dropdown") {
       const dd = document.createElement("div"); makeDropdown(dd, f.key, state.dropdowns[f.key] || [], { value: rec[f.key] || "" });
       dd.querySelector("input").name = f.key; div.appendChild(dd);
@@ -656,7 +805,7 @@ function openEdit(rec) {
     const idx = state.data.findIndex(x => x._id === rec._id);
     if (idx >= 0) state.data[idx] = { ...rec, ...data };
     cacheData(); renderRecords(); $("#editModal").classList.add("hidden"); state.editingId = null;
-    showGoodJob("Record updated successfully!");
+    showSuccessPopup("Record updated successfully!");
 
     const payload = { action: "update", record: { ...rec, ...data } };
     if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
@@ -665,21 +814,21 @@ function openEdit(rec) {
 }
 
 async function deleteRecord(rec) {
-  if (!confirm(`Delete receipt ${rec.receiptNo}?`)) return;
+  if (!confirm(`Are you sure you want to delete receipt ${rec.receiptNo}?`)) return;
   state.data = state.data.filter(x => x._id !== rec._id);
   cacheData(); renderRecords();
-  showGoodJob("Record deleted!");
+  showSuccessPopup("Record deleted!");
   const payload = { action: "delete", record: rec };
   if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
   else enqueue(payload);
 }
 
-/* ================== MANAGE DROPDOWNS (TABS & TABLE) ================== */
+/* ================== MANAGE DROPDOWNS ================== */
 function setupDropdownManager() {
   $$(".dd-tab").forEach(tab => {
     tab.addEventListener("click", () => {
-      $$(".dd-tab").forEach(t => { t.classList.remove("active", "bg-white", "text-blue-700"); t.classList.add("text-slate-600"); });
-      tab.classList.add("active", "bg-white", "text-blue-700"); tab.classList.remove("text-slate-600");
+      $$(".dd-tab").forEach(t => { t.classList.remove("active"); });
+      tab.classList.add("active");
       state.activeDDTab = tab.dataset.cat;
       renderDropdownGrid();
     });
@@ -700,20 +849,20 @@ function setupDropdownManager() {
     state.dropdowns[state.activeDDTab] = state.dropdowns[state.activeDDTab] || [];
     state.dropdowns[state.activeDDTab].push(val);
     
-    // If adding donor, ask for reference immediately
     if (state.activeDDTab === "donorName") {
-      const refVal = prompt(`Donor "${val}" added. Enter Reference C/o (or leave blank):`);
+      const refVal = prompt(`Donor "${val}" added.\nEnter Reference C/o:`);
       if (refVal) {
         state.dropdowns["reference"] = state.dropdowns["reference"] || [];
         state.dropdowns["reference"].push(refVal);
-        state.donorRefMap[val] = refVal;
-        // Also send to sheet
         safePost({ action: "dropdownAdd", category: "reference", value: refVal });
+        
+        const mobVal = prompt(`Enter Mobile Number for "${val}":`);
+        if(mobVal) { state.dropdowns["mobile"] = state.dropdowns["mobile"] || []; state.dropdowns["mobile"].push(mobVal); safePost({ action: "dropdownAdd", category: "mobile", value: mobVal }); }
       }
     }
 
     cacheData(); $("#ddNew").value = ""; renderDropdownGrid(); refreshEntryDropdowns();
-    showGoodJob("Option added successfully!");
+    showSuccessPopup("Option added successfully!");
     const payload = { action: "dropdownAdd", category: state.activeDDTab, value: val };
     if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
   });
@@ -727,27 +876,25 @@ function renderDropdownGrid() {
   else list.sort((a, b) => b.localeCompare(a));
 
   const tbody = $("#ddGridBody"); tbody.innerHTML = "";
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400 text-sm">No values found.</td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No values found.</td></tr>`; return; }
   
   list.forEach((v, i) => {
-    const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50";
+    const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50 transition-colors";
     tr.innerHTML = `
-      <td class="px-4 py-2 text-slate-500">${i + 1}</td>
-      <td class="px-4 py-2 font-medium">${esc(v)}</td>
-      <td class="px-4 py-2 text-right whitespace-nowrap">
-        <button class="text-blue-600 hover:underline text-xs mr-3 btn-edit">Edit</button>
-        <button class="text-red-600 hover:underline text-xs btn-del">Delete</button>
+      <td class="px-4 py-2.5 text-slate-500 font-medium">${i + 1}</td>
+      <td class="px-4 py-2.5 font-medium text-slate-800">${esc(v)}</td>
+      <td class="px-4 py-2.5 text-right whitespace-nowrap">
+        <button class="text-blue-600 hover:text-blue-800 hover:underline text-xs font-medium mr-3 btn-edit">Edit</button>
+        <button class="text-red-600 hover:text-red-800 hover:underline text-xs font-medium btn-del">Delete</button>
       </td>`;
     
     tr.querySelector(".btn-edit").onclick = () => {
       const nv = prompt("Edit value:", v);
       if (!nv || nv === v) return;
       state.dropdowns[cat] = state.dropdowns[cat].map(x => x === v ? nv : x);
-      if (cat === "donorName" && state.donorRefMap[v]) {
-         state.donorRefMap[nv] = state.donorRefMap[v]; delete state.donorRefMap[v];
-      }
+      if (cat === "donorName" && state.donorRefMap[v]) { state.donorRefMap[nv] = state.donorRefMap[v]; delete state.donorRefMap[v]; }
       cacheData(); renderDropdownGrid(); refreshEntryDropdowns();
-      showGoodJob("Option updated!");
+      showSuccessPopup("Option updated!");
       const payload = { action: "dropdownUpdate", category: cat, oldValue: v, newValue: nv };
       if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
     };
@@ -757,7 +904,7 @@ function renderDropdownGrid() {
       state.dropdowns[cat] = state.dropdowns[cat].filter(x => x !== v);
       if (cat === "donorName") delete state.donorRefMap[v];
       cacheData(); renderDropdownGrid(); refreshEntryDropdowns();
-      showGoodJob("Option deleted!");
+      showSuccessPopup("Option deleted!");
       const payload = { action: "dropdownDelete", category: cat, value: v };
       if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
     };
@@ -770,26 +917,59 @@ function setupSettings() {}
 function renderColumnToggles() {
   const box = $("#colToggles"); box.innerHTML = "";
   FIELDS.forEach(f => {
-    const lab = document.createElement("label"); lab.className = "flex items-center gap-2 text-sm bg-slate-50 px-3 py-2 rounded-lg cursor-pointer";
-    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = state.columns[f.key] !== false; cb.disabled = f.key === "receiptNo";
+    const lab = document.createElement("label"); lab.className = "flex items-center gap-2 text-sm bg-slate-50 px-3 py-2 rounded-lg cursor-pointer border border-slate-200 hover:bg-slate-100 transition";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = state.columns[f.key] !== false; cb.disabled = f.key === "receiptNo"; cb.className="rounded text-blue-600 focus:ring-blue-500";
     cb.onchange = () => { state.columns[f.key] = cb.checked; saveColumns(); renderRecords(); toast("Column visibility saved", "success"); };
-    lab.appendChild(cb); lab.appendChild(document.createTextNode(f.label + (f.key === "receiptNo" ? " (locked)" : ""))); box.appendChild(lab);
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(f.label + (f.key === "receiptNo" ? " (Locked)" : ""))); box.appendChild(lab);
   });
 }
 
 function setupExport() {
+  // Excel Export (ALL DATA, Formatted DD/MM/YYYY)
   $("#exportExcel").addEventListener("click", () => {
-    const rows = getFilteredData().map(r => { const o = {}; FIELDS.forEach(f => o[f.label] = r[f.key] ?? ""); return o; });
+    const rows = getFilteredData().map(r => { 
+      const o = {}; 
+      FIELDS.forEach(f => { o[f.label] = f.type === "date" ? formatDate(r[f.key]) : (r[f.key] ?? ""); }); 
+      return o; 
+    });
     if (!rows.length) { toast("No records to export", "warn"); return; }
     const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Filtered Records");
     XLSX.writeFile(wb, `DistrictAccount_${todayISO()}.xlsx`);
-    toast("Excel exported ✓", "success");
+    toast("Excel exported successfully", "success");
   });
+
+  // PDF Export (ONLY VISIBLE COLUMNS, PROPER ALIGNMENT)
   $("#exportPdf").addEventListener("click", () => {
-    const rows = getFilteredData(); if (!rows.length) { toast("No records to print", "warn"); return; }
-    const html = `<html><head><title>Report</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial;font-size:9px}h1{font-size:14px;margin:0}h2{font-size:10px;color:#555;margin:2px 0 8px;font-weight:normal}table{width:100%;border-collapse:collapse}th{background:#e2e8f0;text-align:left;padding:4px;border:1px solid #cbd5e1}td{padding:3px 4px;border:1px solid #e2e8f0}</style></head><body><h1>District Account ERP</h1><h2>Generated ${new Date().toLocaleString()}</h2><table><thead><tr>${FIELDS.map(c=>`<th>${c.label}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${FIELDS.map(c=>`<td>${esc(r[c.key]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table></body></html>`;
-    const w = window.open("", "_blank"); w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
+    const rows = getFilteredData(); 
+    if (!rows.length) { toast("No records to print", "warn"); return; }
+    
+    const visibleCols = FIELDS.filter(f => state.columns[f.key]);
+    
+    const html = `
+      <html><head><title>District Account ERP Report</title>
+      <style>
+        @page { size: A4 landscape; margin: 15mm; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 10px; color: #333; }
+        h1 { font-size: 18px; margin: 0 0 4px 0; color: #1e293b; }
+        .meta { font-size: 11px; color: #64748b; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th { background: #f8fafc; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;}
+        td { padding: 6px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+      </style></head><body>
+      <h1>District Account ERP - Financial Ledger</h1>
+      <div class="meta">
+        <span>Generated: ${new Date().toLocaleString()}</span>
+        <span>Total Records: ${rows.length}</span>
+      </div>
+      <table><thead><tr>${visibleCols.map(c => `<th>${c.label}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(r => `<tr>${visibleCols.map(c => `<td>${esc(c.type === "date" ? formatDate(r[c.key]) : (r[c.key] ?? ""))}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></body></html>`;
+      
+    const w = window.open("", "_blank"); 
+    w.document.write(html); w.document.close(); w.focus(); 
+    setTimeout(() => { w.print(); }, 500);
   });
 }
 
