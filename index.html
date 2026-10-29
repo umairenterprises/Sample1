@@ -9,24 +9,26 @@
 <style>
   .col-filter { min-width: 90px; }
   .sortable:hover { background: #e2e8f0; cursor: pointer; }
-  .drop-option.active { background: #2563eb; color: #fff; }
   .sidebar-collapsed #sidebar { width: 64px; }
   .sidebar-collapsed #sidebar .nav-label,
-  .sidebar-collapsed #sidebar .brand-text,
-  .sidebar-collapsed #sidebar .collapse-label { display: none; }
+  .sidebar-collapsed #sidebar .brand-text { display: none; }
   .sidebar-collapsed #main { margin-left: 64px; }
   #sidebar { transition: width .2s ease; }
   #main { transition: margin-left .2s ease; }
-  .toast { animation: slideIn .25s ease; }
-  @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+  .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .popup-overlay.show { opacity: 1; pointer-events: auto; }
+  .popup-box { transform: scale(0.8); transition: transform 0.3s; }
+  .popup-overlay.show .popup-box { transform: scale(1); }
   .inp { width: 100%; padding: .5rem .75rem; border: 1px solid #cbd5e1; border-radius: .5rem; outline: none; font-size: .875rem; }
   .inp:focus { box-shadow: 0 0 0 2px #93c5fd; border-color: #3b82f6; }
   .nav-item.active { background: #1d4ed8; color: #fff; }
+  .dd-tab { padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; font-size: 0.875rem; border: 1px solid transparent; border-bottom: none; }
+  .dd-tab.active { background: white; border-color: #e2e8f0; color: #1d4ed8; }
 </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
 
-<!-- ============ LOGIN MODAL ============ -->
+<!-- LOGIN MODAL -->
 <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
     <div class="text-center mb-6">
@@ -36,33 +38,26 @@
     <form id="loginForm" class="space-y-4">
       <div>
         <label class="block text-sm font-medium mb-1">Email / Username</label>
-        <input id="loginUser" type="text" required
-          class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input id="loginUser" type="text" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Password</label>
         <div class="relative">
-          <input id="loginPass" type="password" required
-            class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <button type="button" id="togglePass" tabindex="-1"
-            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-lg">👁️</button>
+          <input id="loginPass" type="password" required class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <button type="button" id="togglePass" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-lg">👁️</button>
         </div>
       </div>
       <label class="flex items-center gap-2 text-sm text-slate-600">
         <input id="rememberMe" type="checkbox" class="rounded" /> Remember me
       </label>
       <div id="loginError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
-      <button type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">
-        Sign In
-      </button>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">Sign In</button>
     </form>
   </div>
 </div>
 
-<!-- ============ APP SHELL ============ -->
+<!-- APP SHELL -->
 <div id="app" class="hidden min-h-screen">
-  <!-- SIDEBAR -->
   <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-slate-800 text-slate-200 flex flex-col z-30">
     <div class="flex items-center justify-between px-4 h-16 border-b border-slate-700">
       <span class="brand-text font-bold text-white text-sm leading-tight">District<br/>Account ERP</span>
@@ -82,17 +77,14 @@
         <span>👁️</span><span class="nav-label">View Settings</span>
       </button>
     </nav>
-    <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
-      <div id="syncStatus" class="mb-2">🟢 Online</div>
-      <button id="manualSync" class="w-full bg-slate-700 hover:bg-slate-600 text-white rounded py-1.5 text-xs">
-        Sync Now <span id="queueCount"></span>
-      </button>
+    <div class="p-4 border-t border-slate-700 text-xs text-slate-400 space-y-2">
+      <div id="syncStatus">🟢 Online</div>
+      <button id="refreshDataBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded py-1.5 font-semibold">🔄 Refresh Data</button>
+      <button id="manualSync" class="w-full bg-slate-700 hover:bg-slate-600 text-white rounded py-1.5">Sync Queue <span id="queueCount"></span></button>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div id="main" class="ml-64 min-h-screen flex flex-col">
-    <!-- HEADER -->
     <header class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-20">
       <div class="flex items-center gap-3">
         <button id="mobileMenu" class="md:hidden text-2xl">☰</button>
@@ -108,49 +100,33 @@
       </div>
     </header>
 
-    <!-- CONTENT -->
     <main class="flex-1 p-4 md:p-6">
       <!-- NEW ENTRY -->
       <section id="view-entry" class="view hidden">
         <h2 class="text-xl font-bold mb-4">Receipt Voucher Entry</h2>
         <form id="entryForm" class="bg-white rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label class="text-xs font-medium">Date *</label>
-            <input name="date" type="date" required class="inp" /></div>
-          <div><label class="text-xs font-medium">Book No *</label>
-            <input name="bookNo" required class="inp" /></div>
+          <div><label class="text-xs font-medium">Date *</label><input name="date" type="date" required class="inp" /></div>
+          <div><label class="text-xs font-medium">Book No *</label><input name="bookNo" required class="inp" /></div>
           <div class="relative"><label class="text-xs font-medium">Receipt No *</label>
             <input name="receiptNo" id="receiptNo" required class="inp" />
             <p id="dupErr" class="hidden text-xs text-red-600 mt-1">Receipt No already exists!</p></div>
 
-          <div><label class="text-xs font-medium">Amount Type *</label>
-            <div data-dropdown="amountType"></div></div>
-          <div><label class="text-xs font-medium">Head Department *</label>
-            <div data-dropdown="headDept"></div></div>
-          <div><label class="text-xs font-medium">Sub-Head *</label>
-            <div data-dropdown="subHead"></div></div>
+          <div><label class="text-xs font-medium">Amount Type *</label><div data-dropdown="amountType"></div></div>
+          <div><label class="text-xs font-medium">Head Department *</label><div data-dropdown="headDept"></div></div>
+          <div><label class="text-xs font-medium">Sub-Head *</label><div data-dropdown="subHead"></div></div>
 
-          <div><label class="text-xs font-medium">City *</label>
-            <div data-dropdown="city"></div></div>
-          <div><label class="text-xs font-medium">Donor Name *</label>
-            <div data-dropdown="donorName"></div></div>
-          <div><label class="text-xs font-medium">Amount (PKR) *</label>
-            <input name="amount" type="number" step="0.01" required class="inp" /></div>
+          <div><label class="text-xs font-medium">City *</label><div data-dropdown="city"></div></div>
+          <div><label class="text-xs font-medium">Donor Name *</label><div data-dropdown="donorName" id="donorDD"></div></div>
+          <div><label class="text-xs font-medium">Amount (PKR) *</label><input name="amount" type="number" step="0.01" required class="inp" /></div>
 
-          <div><label class="text-xs font-medium">Donor Mobile</label>
-            <input name="mobile" class="inp" /></div>
-          <div><label class="text-xs font-medium">Email</label>
-            <input name="email" type="email" class="inp" /></div>
-          <div><label class="text-xs font-medium">Reference C/o</label>
-            <div data-dropdown="reference"></div></div>
-          <div><label class="text-xs font-medium">Reference Mobile</label>
-            <input name="refMobile" class="inp" /></div>
+          <div><label class="text-xs font-medium">Donor Mobile</label><input name="mobile" class="inp" /></div>
+          <div><label class="text-xs font-medium">Email</label><input name="email" type="email" class="inp" /></div>
+          <div><label class="text-xs font-medium">Reference C/o</label><div data-dropdown="reference" id="refDD"></div></div>
+          <div><label class="text-xs font-medium">Reference Mobile</label><input name="refMobile" class="inp" /></div>
 
           <div class="md:col-span-3 flex justify-end gap-3 mt-2">
             <button type="reset" class="px-4 py-2 rounded-lg border hover:bg-slate-50">Reset</button>
-            <button type="submit" id="saveBtn"
-              class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-              Save Voucher Entry
-            </button>
+            <button type="submit" id="saveBtn" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">Save Voucher Entry</button>
           </div>
         </form>
       </section>
@@ -176,24 +152,39 @@
       <!-- MANAGE DROPDOWNS -->
       <section id="view-dropdowns" class="view hidden">
         <h2 class="text-xl font-bold mb-4">Manage Dropdowns</h2>
-        <div class="bg-white rounded-xl shadow p-4">
-          <div class="flex flex-wrap gap-2 mb-4">
-            <select id="ddCategory" class="inp max-w-xs">
-              <option value="donorName">Donor Name</option>
-              <option value="headDept">Head Department</option>
-              <option value="subHead">Sub-Head</option>
-              <option value="amountType">Amount Type</option>
-              <option value="city">City</option>
-              <option value="reference">Reference C/o</option>
-            </select>
-            <input id="ddSearch" placeholder="Search…" class="inp max-w-xs" />
-            <button id="ddSort" class="px-3 py-2 border rounded-lg text-sm">Sort A-Z ▲</button>
+        <div class="bg-white rounded-xl shadow border border-slate-200">
+          <!-- Tabs -->
+          <div class="flex overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 pt-2 gap-1">
+            <div class="dd-tab active" data-cat="donorName">Donor Name</div>
+            <div class="dd-tab" data-cat="reference">Reference C/o</div>
+            <div class="dd-tab" data-cat="headDept">Head Department</div>
+            <div class="dd-tab" data-cat="subHead">Sub-Head</div>
+            <div class="dd-tab" data-cat="amountType">Amount Type</div>
+            <div class="dd-tab" data-cat="city">City</div>
           </div>
-          <div class="flex gap-2 mb-4">
-            <input id="ddNew" placeholder="Add new option…" class="inp flex-1" />
-            <button id="ddAdd" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Add</button>
+          
+          <div class="p-4">
+            <div class="flex flex-wrap gap-2 mb-4">
+              <input id="ddSearch" placeholder="Search…" class="inp max-w-xs" />
+              <button id="ddSort" class="px-3 py-2 border rounded-lg text-sm bg-white">Sort A-Z ▲</button>
+              <div class="flex-1"></div>
+              <input id="ddNew" placeholder="Add new option..." class="inp max-w-xs" />
+              <button id="ddAdd" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">Add</button>
+            </div>
+            
+            <div class="overflow-x-auto border rounded-lg">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-slate-100 text-slate-700 border-b">
+                  <tr>
+                    <th class="px-4 py-2 w-16">S.No</th>
+                    <th class="px-4 py-2">Value</th>
+                    <th class="px-4 py-2 w-24 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ddGridBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
           </div>
-          <div id="ddGrid" class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto"></div>
         </div>
       </section>
 
@@ -201,7 +192,7 @@
       <section id="view-settings" class="view hidden">
         <h2 class="text-xl font-bold mb-4">Column Visibility Settings</h2>
         <div class="bg-white rounded-xl shadow p-6">
-          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records. Export always includes all 13 fields.</p>
+          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records. Export always includes all fields.</p>
           <div id="colToggles" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
         </div>
       </section>
@@ -209,7 +200,7 @@
   </div>
 </div>
 
-<!-- ============ EDIT MODAL ============ -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="hidden fixed inset-0 z-40 bg-slate-900/50 flex items-center justify-center p-4">
   <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
     <h3 class="text-lg font-bold mb-4">Edit Voucher</h3>
@@ -221,19 +212,21 @@
   </div>
 </div>
 
-<!-- ============ TOAST ============ -->
+<!-- GOOD JOB POPUP -->
+<div id="goodJobPopup" class="popup-overlay">
+  <div class="popup-box bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm w-full mx-4">
+    <div class="text-5xl mb-4">🎉</div>
+    <h3 class="text-2xl font-bold text-slate-800 mb-1">Good Job!</h3>
+    <p id="popupMsg" class="text-slate-500 text-sm">Action completed successfully.</p>
+  </div>
+</div>
+
+<!-- TOAST -->
 <div id="toastBox" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
 <script>
-/* =====================================================================
-   CONFIG (Your API URL included here)
-   ===================================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbza1jbPSrpVhCFpegVPeHu-cngjtxmk-eEfUnsOIVvJd6u43XKrhq0BgpCXv8eNots-/exec";
-const LS = {
-  session: "daerp_session",
-  queue: "daerp_queue",
-  columns: "daerp_columns",
-};
+const LS = { session: "daerp_session", queue: "daerp_queue", columns: "daerp_columns" };
 
 const FIELDS = [
   { key: "date", label: "Date", type: "date" },
@@ -256,42 +249,34 @@ const DROPDOWN_LABELS = {
   city: "City", donorName: "Donor Name", reference: "Reference C/o",
 };
 
-/* =====================================================================
-   STATE
-   ===================================================================== */
 const state = {
-  user: null,
-  data: [],           
-  dropdowns: {},      
-  columns: {},        
-  sort: { key: "date", dir: "desc" },
-  colFilters: {},     
-  editingId: null,
-  online: navigator.onLine,
+  user: null, data: [], dropdowns: {}, donorRefMap: {},
+  columns: {}, sort: { key: "date", dir: "desc" },
+  colFilters: {}, editingId: null, online: navigator.onLine, activeDDTab: "donorName", ddSortAsc: true
 };
 
-/* =====================================================================
-   UTILITIES
-   ===================================================================== */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 function toast(msg, kind = "info") {
   const colors = { info: "bg-slate-800", success: "bg-emerald-600", error: "bg-red-600", warn: "bg-amber-500" };
   const el = document.createElement("div");
-  el.className = `toast ${colors[kind]} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm max-w-xs`;
+  el.className = `${colors[kind]} text-white px-4 py-2.5 rounded-lg shadow-lg text-sm max-w-xs toast`;
   el.textContent = msg;
   $("#toastBox").appendChild(el);
   setTimeout(() => el.remove(), 3500);
+}
+
+function showGoodJob(msg = "Action completed successfully.") {
+  $("#popupMsg").textContent = msg;
+  $("#goodJobPopup").classList.add("show");
+  setTimeout(() => { $("#goodJobPopup").classList.remove("show"); }, 2000);
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
-/* =====================================================================
-   LOCAL PERSISTENCE
-   ===================================================================== */
 function loadColumns() {
   try {
     const saved = JSON.parse(localStorage.getItem(LS.columns));
@@ -306,14 +291,8 @@ function saveColumns() { localStorage.setItem(LS.columns, JSON.stringify(state.c
 function queue() { try { return JSON.parse(localStorage.getItem(LS.queue)) || []; } catch { return []; } }
 function setQueue(q) { localStorage.setItem(LS.queue, JSON.stringify(q)); updateQueueBadge(); }
 function enqueue(op) { const q = queue(); q.push(op); setQueue(q); }
-function updateQueueBadge() {
-  const n = queue().length;
-  $("#queueCount").textContent = n ? `(${n})` : "";
-}
+function updateQueueBadge() { const n = queue().length; $("#queueCount").textContent = n ? `(${n})` : ""; }
 
-/* =====================================================================
-   API LAYER (Improved Fetch for Google Apps Script)
-   ===================================================================== */
 async function apiGet(action, params = {}) {
   const url = new URL(API_URL);
   url.searchParams.set("action", action);
@@ -322,73 +301,45 @@ async function apiGet(action, params = {}) {
   if (!res.ok) throw new Error("Network error");
   return res.json();
 }
-
 async function apiPost(payload) {
   const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify(payload),
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    redirect: "follow"
+    method: "POST", body: JSON.stringify(payload),
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, redirect: "follow"
   });
   if (!res.ok) throw new Error("Network error");
   return res.json();
 }
+async function safePost(payload) {
+  try { const r = await apiPost(payload); return r.ok ? r : null; } catch { return null; }
+}
 
-/* =====================================================================
-   AUTH
-   ===================================================================== */
+/* ================== AUTH & BOOTSTRAP ================== */
 function initLogin() {
   const saved = localStorage.getItem(LS.session);
-  if (saved) {
-    try {
-      state.user = JSON.parse(saved);
-      startApp();
-      return;
-    } catch { /* fall through */ }
-  }
+  if (saved) { try { state.user = JSON.parse(saved); startApp(); return; } catch {} }
   $("#loginModal").classList.remove("hidden");
-
   $("#togglePass").addEventListener("click", () => {
-    const inp = $("#loginPass");
-    inp.type = inp.type === "password" ? "text" : "password";
+    const inp = $("#loginPass"); inp.type = inp.type === "password" ? "text" : "password";
     $("#togglePass").textContent = inp.type === "password" ? "👁️" : "🙈";
   });
-
   $("#loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const user = $("#loginUser").value.trim();
-    const pass = $("#loginPass").value;
-    const err = $("#loginError");
+    const user = $("#loginUser").value.trim(), pass = $("#loginPass").value, err = $("#loginError");
     err.classList.add("hidden");
-
-    // Show loading state
-    const btn = e.target.querySelector('button[type="submit"]');
-    const origText = btn.textContent;
-    btn.textContent = "Signing In...";
-    btn.disabled = true;
-
+    const btn = e.target.querySelector('button[type="submit"]'); btn.textContent = "Signing In..."; btn.disabled = true;
     let auth = null;
     try {
       const res = await apiPost({ action: "login", username: user, password: pass });
       if (res.ok) auth = res.user;
     } catch (error) {
-      console.error("Login fetch error:", error);
-      // Offline fallback
       const cached = localStorage.getItem("daerp_users_cache");
       if (cached) {
         const users = JSON.parse(cached);
         auth = users.find(u => (u.email === user || u.username === user) && u.password === pass && u.status === "Active");
       }
     }
-
-    btn.textContent = origText;
-    btn.disabled = false;
-
-    if (!auth) {
-      err.textContent = "Invalid credentials or inactive account.";
-      err.classList.remove("hidden");
-      return;
-    }
+    btn.textContent = "Sign In"; btn.disabled = false;
+    if (!auth) { err.textContent = "Invalid credentials or inactive account."; err.classList.remove("hidden"); return; }
     state.user = auth;
     if ($("#rememberMe").checked) localStorage.setItem(LS.session, JSON.stringify(auth));
     else sessionStorage.setItem(LS.session, JSON.stringify(auth));
@@ -396,27 +347,37 @@ function initLogin() {
   });
 }
 
-function logout() {
-  localStorage.removeItem(LS.session);
-  sessionStorage.removeItem(LS.session);
-  state.user = null;
-  location.reload();
+function startApp() {
+  $("#loginModal").classList.add("hidden"); $("#app").classList.remove("hidden");
+  $("#roleBadge").textContent = state.user.role || "User";
+  $("#userName").textContent = state.user.name || state.user.email || "";
+  if (state.user.role !== "Admin") $$(".admin-only").forEach(el => el.classList.add("hidden"));
+  
+  state.columns = loadColumns();
+  updateQueueBadge(); updateOnlineStatus(); renderColumnToggles();
+  fetchData(true); // Fetch fresh data on load
+  setupNav(); setupEntryForm(); setupRecords(); setupDropdownManager(); setupSettings(); setupSidebar(); setupExport();
+  setInterval(() => { if (state.online) flushQueue(); }, 15000);
 }
 
-/* =====================================================================
-   BOOTSTRAP + SYNC
-   ===================================================================== */
-async function bootstrap() {
+async function fetchData(showToast = false) {
   try {
     const res = await apiGet("bootstrap");
     if (res.ok) {
       state.data = res.data || [];
       state.dropdowns = res.dropdowns || {};
+      
+      // Build Donor -> Reference Map
+      state.donorRefMap = {};
+      const dnList = state.dropdowns.donorName || [];
+      const refList = state.dropdowns.reference || [];
+      dnList.forEach((dn, i) => { if(refList[i]) state.donorRefMap[dn] = refList[i]; });
+
       localStorage.setItem("daerp_users_cache", JSON.stringify(res.users || []));
       renderAll();
+      if (showToast) toast("Data refreshed from Google Sheet", "success");
     }
   } catch (e) {
-    console.error("Bootstrap error:", e);
     toast("Offline mode — using cached data", "warn");
     const cachedData = localStorage.getItem("daerp_data_cache");
     const cachedDd = localStorage.getItem("daerp_dd_cache");
@@ -426,6 +387,12 @@ async function bootstrap() {
   }
 }
 
+function renderAll() {
+  renderRecords();
+  renderDropdownGrid();
+  refreshEntryDropdowns();
+  cacheData();
+}
 function cacheData() {
   localStorage.setItem("daerp_data_cache", JSON.stringify(state.data));
   localStorage.setItem("daerp_dd_cache", JSON.stringify(state.dropdowns));
@@ -433,102 +400,49 @@ function cacheData() {
 
 async function flushQueue() {
   if (!state.online || !queue().length) return;
-  const q = queue();
-  const remain = [];
+  const q = queue(); const remain = [];
   for (const op of q) {
-    try {
-      const res = await apiPost(op);
-      if (!res.ok) remain.push(op);
-    } catch { remain.push(op); }
+    try { const res = await apiPost(op); if (!res.ok) remain.push(op); } catch { remain.push(op); }
   }
   setQueue(remain);
   if (!remain.length) toast("All pending changes synced ✓", "success");
-  else toast(`${remain.length} pending — will retry`, "warn");
 }
 
-/* =====================================================================
-   RENDER: APP SHELL & NAV
-   ===================================================================== */
-function startApp() {
-  $("#loginModal").classList.add("hidden");
-  $("#app").classList.remove("hidden");
-  $("#roleBadge").textContent = state.user.role || "User";
-  $("#userName").textContent = state.user.name || state.user.email || "";
-
-  if (state.user.role !== "Admin") {
-    $$(".admin-only").forEach(el => el.classList.add("hidden"));
-  }
-
-  state.columns = loadColumns();
-  updateQueueBadge();
-  updateOnlineStatus();
-  renderColumnToggles();
-  bootstrap();
-  setupNav();
-  setupEntryForm();
-  setupRecords();
-  setupDropdownManager();
-  setupSettings();
-  setupSidebar();
-  setupExport();
-  setInterval(() => { if (state.online) flushQueue(); }, 15000);
-}
-
+/* ================== NAV & SIDEBAR ================== */
 function setupNav() {
-  $$(".nav-item").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $$(".nav-item").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      showView(btn.dataset.nav);
-    });
-  });
+  $$(".nav-item").forEach(btn => btn.addEventListener("click", () => {
+    $$(".nav-item").forEach(b => b.classList.remove("active")); btn.classList.add("active");
+    $$(".view").forEach(v => v.classList.add("hidden")); $(`#view-${btn.dataset.nav}`).classList.remove("hidden");
+    if (btn.dataset.nav === "records") renderRecords();
+    if (btn.dataset.nav === "dropdowns") renderDropdownGrid();
+  }));
   $('[data-nav="entry"]').click();
-  $("#logoutBtn").addEventListener("click", logout);
+  $("#logoutBtn").addEventListener("click", () => { localStorage.removeItem(LS.session); sessionStorage.removeItem(LS.session); location.reload(); });
 }
-
-function showView(name) {
-  $$(".view").forEach(v => v.classList.add("hidden"));
-  const v = $(`#view-${name}`);
-  if (v) v.classList.remove("hidden");
-  if (name === "records") renderRecords();
-  if (name === "dropdowns") renderDropdownGrid();
-  if (name === "settings") renderColumnToggles();
-}
-
 function setupSidebar() {
   $("#collapseBtn").addEventListener("click", () => {
     document.body.classList.toggle("sidebar-collapsed");
     $("#collapseBtn").textContent = document.body.classList.contains("sidebar-collapsed") ? "►" : "◄";
   });
   $("#mobileMenu").addEventListener("click", () => {
-    const s = $("#sidebar");
-    s.classList.toggle("translate-x-0");
-    s.classList.toggle("-translate-x-full");
+    const s = $("#sidebar"); s.classList.toggle("translate-x-0"); s.classList.toggle("-translate-x-full");
   });
   $("#manualSync").addEventListener("click", () => { if (state.online) flushQueue(); else toast("Offline — cannot sync", "warn"); });
+  $("#refreshDataBtn").addEventListener("click", () => fetchData(true));
 }
-
 function updateOnlineStatus() {
-  state.online = navigator.onLine;
-  $("#syncStatus").textContent = state.online ? "🟢 Online" : "🔴 Offline";
+  state.online = navigator.onLine; $("#syncStatus").textContent = state.online ? "🟢 Online" : "🔴 Offline";
 }
 window.addEventListener("online", () => { updateOnlineStatus(); flushQueue(); });
 window.addEventListener("offline", updateOnlineStatus);
 
-/* =====================================================================
-   SEARCHABLE DROPDOWN COMPONENT
-   ===================================================================== */
+/* ================== DROPDOWN COMPONENT ================== */
 function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
   container.innerHTML = "";
-  const wrap = document.createElement("div");
-  wrap.className = "relative";
-
+  const wrap = document.createElement("div"); wrap.className = "relative";
   const input = document.createElement("input");
-  input.className = "inp";
-  input.placeholder = `Search ${DROPDOWN_LABELS[key] || key}…`;
-  input.autocomplete = "off";
-  input.value = value;
-
+  input.className = "inp"; input.placeholder = `Search ${DROPDOWN_LABELS[key] || key}…`;
+  input.autocomplete = "off"; input.value = value;
   const panel = document.createElement("div");
   panel.className = "absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-56 overflow-y-auto hidden";
 
@@ -536,18 +450,13 @@ function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
     const f = filter.toLowerCase();
     const list = (options || []).filter(o => String(o).toLowerCase().includes(f)).slice(0, 100);
     panel.innerHTML = "";
-    if (!list.length) {
-      panel.innerHTML = `<div class="px-3 py-2 text-sm text-slate-400">No matches</div>`;
-      return;
-    }
+    if (!list.length) { panel.innerHTML = `<div class="px-3 py-2 text-sm text-slate-400">No matches</div>`; return; }
     list.forEach((o, i) => {
       const el = document.createElement("div");
       el.className = "px-3 py-2 text-sm hover:bg-slate-100 cursor-pointer" + (i === 0 ? " active" : "");
       el.textContent = o;
       el.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        input.value = o;
-        panel.classList.add("hidden");
+        e.preventDefault(); input.value = o; panel.classList.add("hidden");
         input.dispatchEvent(new Event("change", { bubbles: true }));
         if (onSelect) onSelect(o);
       });
@@ -566,23 +475,26 @@ function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
     }
   });
   input.addEventListener("blur", () => setTimeout(() => panel.classList.add("hidden"), 150));
-
-  wrap.appendChild(input);
-  wrap.appendChild(panel);
-  container.appendChild(wrap);
+  wrap.appendChild(input); wrap.appendChild(panel); container.appendChild(wrap);
   input.dataset.dropdownKey = key;
-  input.dataset.dropdownValue = value;
 }
 
-/* =====================================================================
-   NEW ENTRY FORM
-   ===================================================================== */
+/* ================== NEW ENTRY ================== */
 function setupEntryForm() {
-  $$("[data-dropdown]").forEach(el => {
-    makeDropdown(el, el.dataset.dropdown, state.dropdowns[el.dataset.dropdown] || []);
-  });
-
+  refreshEntryDropdowns();
   $("#receiptNo").addEventListener("input", checkDuplicate);
+
+  // Auto-fill Reference C/o when Donor Name is selected
+  $("#donorDD").addEventListener("change", (e) => {
+    if (e.target.tagName === "INPUT") {
+      const selectedDonor = e.target.value;
+      const refInput = $("#refDD input");
+      if (state.donorRefMap[selectedDonor] && refInput) {
+        refInput.value = state.donorRefMap[selectedDonor];
+        refInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  });
 
   $("#entryForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -590,73 +502,72 @@ function setupEntryForm() {
     const fd = new FormData(e.target);
     const rec = {};
     FIELDS.forEach(f => rec[f.key] = (fd.get(f.key) || "").toString().trim());
-    rec.amount = parseFloat(rec.amount) || 0;
-    rec._id = uid();
-    rec._synced = state.online;
+    
+    // Fallback for custom dropdown inputs
+    $$("[data-dropdown]").forEach(el => {
+      const inp = el.querySelector("input");
+      if(inp) rec[inp.dataset.dropdownKey] = inp.value.trim();
+    });
 
+    rec.amount = parseFloat(rec.amount) || 0;
+    rec._id = uid(); rec._synced = state.online;
     if (!rec.date) rec.date = todayISO();
 
-    state.data.unshift(rec);
-    cacheData();
-    renderRecords();
-
-    if (state.online) {
-      const res = await safePost({ action: "add", record: rec });
-      if (!res) { enqueue({ action: "add", record: rec }); toast("Saved locally — queued for sync", "warn"); }
-      else toast("Voucher saved ✓", "success");
-    } else {
-      enqueue({ action: "add", record: rec });
-      toast("Offline — queued for sync", "warn");
-    }
-
+    // Instantly add to table (No wait!)
+    state.data.unshift(rec); cacheData(); renderRecords();
+    
+    // Reset form instantly
     e.target.reset();
-    $$("[data-dropdown] input").forEach(inp => { inp.value = ""; });
-    $("#dupErr").classList.add("hidden");
-    $("#saveBtn").disabled = false;
+    $$("[data-dropdown] input").forEach(inp => inp.value = "");
+    $("#dupErr").classList.add("hidden"); $("#saveBtn").disabled = false;
+    
+    showGoodJob("Voucher saved successfully!");
+
+    // Send to Google Sheet in background
+    const payload = { action: "add", record: rec };
+    if (state.online) {
+      safePost(payload).then(res => {
+         if(!res) enqueue(payload);
+      });
+    } else {
+      enqueue(payload); toast("Offline — queued for sync", "warn");
+    }
   });
 }
 
-async function safePost(payload) {
-  try { const r = await apiPost(payload); return r.ok ? r : null; }
-  catch { return null; }
+function refreshEntryDropdowns() {
+  $$("[data-dropdown]").forEach(el => {
+    const key = el.dataset.dropdown;
+    makeDropdown(el, key, state.dropdowns[key] || []);
+  });
 }
 
 function checkDuplicate() {
   const val = $("#receiptNo").value.trim();
   const dup = val && state.data.some(r => String(r.receiptNo).trim() === val && r._id !== state.editingId);
-  $("#dupErr").classList.toggle("hidden", !dup);
-  $("#saveBtn").disabled = !!dup;
+  $("#dupErr").classList.toggle("hidden", !dup); $("#saveBtn").disabled = !!dup;
   return !!dup;
 }
 
-/* =====================================================================
-   VIEW RECORDS
-   ===================================================================== */
+/* ================== VIEW RECORDS ================== */
 function setupRecords() {
   $("#recordsHead").addEventListener("click", (e) => {
-    const th = e.target.closest("th[data-sort]");
-    if (!th) return;
+    const th = e.target.closest("th[data-sort]"); if (!th) return;
     const key = th.dataset.sort;
     if (state.sort.key === key) state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
     else { state.sort.key = key; state.sort.dir = "asc"; }
     renderRecords();
   });
 }
-
 function getFilteredData() {
   const f = state.colFilters;
-  return state.data.filter(r =>
-    Object.entries(f).every(([k, v]) => {
-      if (!v) return true;
-      return String(r[k] ?? "").toLowerCase().includes(v.toLowerCase());
-    })
-  );
+  return state.data.filter(r => Object.entries(f).every(([k, v]) => {
+    if (!v) return true;
+    return String(r[k] ?? "").toLowerCase().includes(v.toLowerCase());
+  }));
 }
-
 function renderRecords() {
-  const head = $("#recordsHead");
-  const visibleFields = FIELDS.filter(f => state.columns[f.key]);
-
+  const head = $("#recordsHead"), visibleFields = FIELDS.filter(f => state.columns[f.key]);
   const activeFilterKey = document.activeElement?.dataset?.filterKey;
   const selStart = document.activeElement?.selectionStart;
 
@@ -670,30 +581,17 @@ function renderRecords() {
     th.textContent = f.label + arrow;
     trH.appendChild(th);
   });
-  if (state.user.role === "Admin") {
-    const th = document.createElement("th");
-    th.className = "px-3 py-2 text-left font-semibold border-b";
-    th.textContent = "Actions";
-    trH.appendChild(th);
-  }
+  if (state.user.role === "Admin") { const th = document.createElement("th"); th.className = "px-3 py-2 text-left font-semibold border-b"; th.textContent = "Actions"; trH.appendChild(th); }
   head.appendChild(trH);
 
-  const trF = document.createElement("tr");
-  trF.className = "bg-slate-50";
+  const trF = document.createElement("tr"); trF.className = "bg-slate-50";
   visibleFields.forEach(f => {
-    const td = document.createElement("td");
-    td.className = "px-2 py-1 border-b";
+    const td = document.createElement("td"); td.className = "px-2 py-1 border-b";
     const inp = document.createElement("input");
-    inp.className = "col-filter w-full text-xs border rounded px-2 py-1";
-    inp.placeholder = "Filter…";
-    inp.dataset.filterKey = f.key;
-    inp.value = state.colFilters[f.key] || "";
-    inp.addEventListener("input", () => {
-      state.colFilters[f.key] = inp.value;
-      renderRecordsBodyOnly();
-    });
-    td.appendChild(inp);
-    trF.appendChild(td);
+    inp.className = "col-filter w-full text-xs border rounded px-2 py-1"; inp.placeholder = "Filter…";
+    inp.dataset.filterKey = f.key; inp.value = state.colFilters[f.key] || "";
+    inp.addEventListener("input", () => { state.colFilters[f.key] = inp.value; renderRecordsBodyOnly(); });
+    td.appendChild(inp); trF.appendChild(td);
   });
   if (state.user.role === "Admin") trF.appendChild(document.createElement("td"));
   head.appendChild(trF);
@@ -705,72 +603,47 @@ function renderRecords() {
     if (el) { el.focus(); try { el.setSelectionRange(selStart, selStart); } catch {} }
   }
 }
-
 function renderRecordsBodyOnly() {
-  const body = $("#recordsBody");
-  const visibleFields = FIELDS.filter(f => state.columns[f.key]);
+  const body = $("#recordsBody"), visibleFields = FIELDS.filter(f => state.columns[f.key]);
   const rows = getFilteredData().slice().sort((a, b) => {
-    const k = state.sort.key;
-    let va = a[k], vb = b[k];
+    const k = state.sort.key; let va = a[k], vb = b[k];
     if (k === "amount") { va = +va || 0; vb = +vb || 0; }
     else { va = String(va ?? "").toLowerCase(); vb = String(vb ?? "").toLowerCase(); }
     if (va < vb) return state.sort.dir === "asc" ? -1 : 1;
     if (va > vb) return state.sort.dir === "asc" ? 1 : -1;
     return 0;
   });
-
   body.innerHTML = "";
   rows.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.className = "hover:bg-slate-50";
+    const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50";
     visibleFields.forEach(f => {
-      const td = document.createElement("td");
-      td.className = "px-3 py-2 border-b text-slate-700 whitespace-nowrap";
-      td.textContent = r[f.key] ?? "";
-      tr.appendChild(td);
+      const td = document.createElement("td"); td.className = "px-3 py-2 border-b text-slate-700 whitespace-nowrap";
+      td.textContent = r[f.key] ?? ""; tr.appendChild(td);
     });
     if (state.user.role === "Admin") {
-      const td = document.createElement("td");
-      td.className = "px-3 py-2 border-b whitespace-nowrap";
-      const edit = document.createElement("button");
-      edit.className = "text-blue-600 hover:underline text-xs mr-3";
-      edit.textContent = "Edit";
-      edit.onclick = () => openEdit(r);
-      const del = document.createElement("button");
-      del.className = "text-red-600 hover:underline text-xs";
-      del.textContent = "Delete";
-      del.onclick = () => deleteRecord(r);
-      td.appendChild(edit); td.appendChild(del);
-      tr.appendChild(td);
+      const td = document.createElement("td"); td.className = "px-3 py-2 border-b whitespace-nowrap";
+      const edit = document.createElement("button"); edit.className = "text-blue-600 hover:underline text-xs mr-3"; edit.textContent = "Edit"; edit.onclick = () => openEdit(r);
+      const del = document.createElement("button"); del.className = "text-red-600 hover:underline text-xs"; del.textContent = "Delete"; del.onclick = () => deleteRecord(r);
+      td.appendChild(edit); td.appendChild(del); tr.appendChild(td);
     }
     body.appendChild(tr);
   });
-
   $("#recordsMeta").textContent = `${rows.length} of ${state.data.length} records`;
 }
 
 function openEdit(rec) {
   state.editingId = rec._id;
-  const form = $("#editForm");
-  form.innerHTML = "";
+  const form = $("#editForm"); form.innerHTML = "";
   FIELDS.forEach(f => {
-    const div = document.createElement("div");
-    const label = document.createElement("label");
-    label.className = "text-xs font-medium";
-    label.textContent = f.label;
-    div.appendChild(label);
+    const div = document.createElement("div"); const label = document.createElement("label");
+    label.className = "text-xs font-medium"; label.textContent = f.label; div.appendChild(label);
     if (f.type === "dropdown") {
-      const dd = document.createElement("div");
-      makeDropdown(dd, f.key, state.dropdowns[f.key] || [], { value: rec[f.key] || "" });
-      dd.querySelector("input").name = f.key;
-      div.appendChild(dd);
+      const dd = document.createElement("div"); makeDropdown(dd, f.key, state.dropdowns[f.key] || [], { value: rec[f.key] || "" });
+      dd.querySelector("input").name = f.key; div.appendChild(dd);
     } else {
-      const inp = document.createElement("input");
-      inp.className = "inp";
-      inp.name = f.key;
+      const inp = document.createElement("input"); inp.className = "inp"; inp.name = f.key;
       inp.type = f.type === "number" ? "number" : (f.type === "date" ? "date" : "text");
-      inp.value = rec[f.key] ?? "";
-      div.appendChild(inp);
+      inp.value = rec[f.key] ?? ""; div.appendChild(inp);
     }
     form.appendChild(div);
   });
@@ -778,193 +651,148 @@ function openEdit(rec) {
   $("#editCancel").onclick = () => { $("#editModal").classList.add("hidden"); state.editingId = null; };
   $("#editSave").onclick = async () => {
     const data = {};
-    FIELDS.forEach(f => {
-      const el = form.querySelector(`[name="${f.key}"]`);
-      data[f.key] = el ? el.value : "";
-    });
+    FIELDS.forEach(f => { const el = form.querySelector(`[name="${f.key}"]`); data[f.key] = el ? el.value : ""; });
     data.amount = parseFloat(data.amount) || 0;
     const idx = state.data.findIndex(x => x._id === rec._id);
     if (idx >= 0) state.data[idx] = { ...rec, ...data };
-    cacheData();
-    renderRecords();
-    $("#editModal").classList.add("hidden");
-    state.editingId = null;
+    cacheData(); renderRecords(); $("#editModal").classList.add("hidden"); state.editingId = null;
+    showGoodJob("Record updated successfully!");
 
     const payload = { action: "update", record: { ...rec, ...data } };
-    if (state.online) {
-      const r = await safePost(payload);
-      if (!r) { enqueue(payload); toast("Queued for sync", "warn"); }
-      else toast("Updated ✓", "success");
-    } else { enqueue(payload); toast("Offline — queued", "warn"); }
+    if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
+    else enqueue(payload);
   };
 }
 
 async function deleteRecord(rec) {
   if (!confirm(`Delete receipt ${rec.receiptNo}?`)) return;
   state.data = state.data.filter(x => x._id !== rec._id);
-  cacheData();
-  renderRecords();
+  cacheData(); renderRecords();
+  showGoodJob("Record deleted!");
   const payload = { action: "delete", record: rec };
-  if (state.online) {
-    const r = await safePost(payload);
-    if (!r) { enqueue(payload); toast("Queued for sync", "warn"); }
-    else toast("Deleted ✓", "success");
-  } else { enqueue(payload); toast("Offline — queued", "warn"); }
+  if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
+  else enqueue(payload);
 }
 
-/* =====================================================================
-   EXPORT
-   ===================================================================== */
-function setupExport() {
-  $("#exportExcel").addEventListener("click", () => {
-    const rows = getFilteredData().map(r => {
-      const o = {};
-      FIELDS.forEach(f => o[f.label] = r[f.key] ?? "");
-      return o;
-    });
-    if (!rows.length) { toast("No records to export", "warn"); return; }
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Filtered Records");
-    XLSX.writeFile(wb, `DistrictAccount_${todayISO()}.xlsx`);
-    toast("Excel exported ✓", "success");
-  });
-
-  $("#exportPdf").addEventListener("click", () => {
-    const rows = getFilteredData();
-    if (!rows.length) { toast("No records to print", "warn"); return; }
-    const cols = FIELDS;
-    const html = `
-      <html><head><title>District Account ERP Report</title>
-      <style>
-        @page { size: A4 landscape; margin: 12mm; }
-        body { font-family: Arial, sans-serif; font-size: 9px; }
-        h1 { font-size: 14px; margin: 0; } h2 { font-size: 10px; color:#555; margin: 2px 0 8px; font-weight: normal;}
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #e2e8f0; text-align: left; padding: 4px; border: 1px solid #cbd5e1; }
-        td { padding: 3px 4px; border: 1px solid #e2e8f0; }
-      </style></head><body>
-      <h1>District Account ERP</h1>
-      <h2>Powered by Umair Sajid — Generated ${new Date().toLocaleString()}</h2>
-      <table><thead><tr>${cols.map(c => `<th>${c.label}</th>`).join("")}</tr></thead>
-      <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${esc(r[c.key] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody>
-      </table></body></html>`;
-    const w = window.open("", "_blank");
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 400);
-  });
-}
-
-/* =====================================================================
-   MANAGE DROPDOWNS
-   ===================================================================== */
+/* ================== MANAGE DROPDOWNS (TABS & TABLE) ================== */
 function setupDropdownManager() {
-  $("#ddCategory").addEventListener("change", renderDropdownGrid);
+  $$(".dd-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      $$(".dd-tab").forEach(t => { t.classList.remove("active", "bg-white", "text-blue-700"); t.classList.add("text-slate-600"); });
+      tab.classList.add("active", "bg-white", "text-blue-700"); tab.classList.remove("text-slate-600");
+      state.activeDDTab = tab.dataset.cat;
+      renderDropdownGrid();
+    });
+  });
+
   $("#ddSearch").addEventListener("input", renderDropdownGrid);
   $("#ddSort").addEventListener("click", () => {
-    const cat = $("#ddCategory").value;
-    state.dropdowns[cat] = (state.dropdowns[cat] || []).slice().sort((a, b) =>
-      $("#ddSort").textContent.includes("A-Z") ? b.localeCompare(a) : a.localeCompare(b));
-    $("#ddSort").textContent = $("#ddSort").textContent.includes("A-Z") ? "Sort Z-A ▼" : "Sort A-Z ▲";
+    state.ddSortAsc = !state.ddSortAsc;
+    $("#ddSort").textContent = state.ddSortAsc ? "Sort A-Z ▲" : "Sort Z-A ▼";
     renderDropdownGrid();
   });
+
   $("#ddAdd").addEventListener("click", async () => {
-    const cat = $("#ddCategory").value;
     const val = $("#ddNew").value.trim();
     if (!val) return;
-    if ((state.dropdowns[cat] || []).includes(val)) { toast("Already exists", "warn"); return; }
-    state.dropdowns[cat] = state.dropdowns[cat] || [];
-    state.dropdowns[cat].push(val);
-    cacheData();
-    $("#ddNew").value = "";
-    renderDropdownGrid();
-    const payload = { action: "dropdownAdd", category: cat, value: val };
-    if (state.online) { const r = await safePost(payload); if (!r) enqueue(payload); }
-    else enqueue(payload);
-    refreshEntryDropdowns();
+    if ((state.dropdowns[state.activeDDTab] || []).includes(val)) { toast("Already exists", "warn"); return; }
+    
+    state.dropdowns[state.activeDDTab] = state.dropdowns[state.activeDDTab] || [];
+    state.dropdowns[state.activeDDTab].push(val);
+    
+    // If adding donor, ask for reference immediately
+    if (state.activeDDTab === "donorName") {
+      const refVal = prompt(`Donor "${val}" added. Enter Reference C/o (or leave blank):`);
+      if (refVal) {
+        state.dropdowns["reference"] = state.dropdowns["reference"] || [];
+        state.dropdowns["reference"].push(refVal);
+        state.donorRefMap[val] = refVal;
+        // Also send to sheet
+        safePost({ action: "dropdownAdd", category: "reference", value: refVal });
+      }
+    }
+
+    cacheData(); $("#ddNew").value = ""; renderDropdownGrid(); refreshEntryDropdowns();
+    showGoodJob("Option added successfully!");
+    const payload = { action: "dropdownAdd", category: state.activeDDTab, value: val };
+    if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
   });
 }
 
 function renderDropdownGrid() {
-  const cat = $("#ddCategory").value;
-  const search = $("#ddSearch").value.toLowerCase();
-  const list = (state.dropdowns[cat] || []).filter(v => v.toLowerCase().includes(search));
-  const grid = $("#ddGrid");
-  grid.innerHTML = "";
-  if (!list.length) { grid.innerHTML = `<div class="p-4 text-sm text-slate-400">No values.</div>`; return; }
-  list.forEach(v => {
-    const row = document.createElement("div");
-    row.className = "flex items-center justify-between py-2 px-2 hover:bg-slate-50";
-    const span = document.createElement("span");
-    span.className = "text-sm"; span.textContent = v;
-    const btns = document.createElement("div");
-    btns.className = "flex gap-2";
+  const cat = state.activeDDTab, search = $("#ddSearch").value.toLowerCase();
+  let list = [...(state.dropdowns[cat] || [])];
+  if (search) list = list.filter(v => v.toLowerCase().includes(search));
+  if (state.ddSortAsc) list.sort((a, b) => a.localeCompare(b));
+  else list.sort((a, b) => b.localeCompare(a));
 
-    const edit = document.createElement("button");
-    edit.className = "text-blue-600 text-xs hover:underline"; edit.textContent = "Edit";
-    edit.onclick = () => {
+  const tbody = $("#ddGridBody"); tbody.innerHTML = "";
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400 text-sm">No values found.</td></tr>`; return; }
+  
+  list.forEach((v, i) => {
+    const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50";
+    tr.innerHTML = `
+      <td class="px-4 py-2 text-slate-500">${i + 1}</td>
+      <td class="px-4 py-2 font-medium">${esc(v)}</td>
+      <td class="px-4 py-2 text-right whitespace-nowrap">
+        <button class="text-blue-600 hover:underline text-xs mr-3 btn-edit">Edit</button>
+        <button class="text-red-600 hover:underline text-xs btn-del">Delete</button>
+      </td>`;
+    
+    tr.querySelector(".btn-edit").onclick = () => {
       const nv = prompt("Edit value:", v);
       if (!nv || nv === v) return;
       state.dropdowns[cat] = state.dropdowns[cat].map(x => x === v ? nv : x);
+      if (cat === "donorName" && state.donorRefMap[v]) {
+         state.donorRefMap[nv] = state.donorRefMap[v]; delete state.donorRefMap[v];
+      }
       cacheData(); renderDropdownGrid(); refreshEntryDropdowns();
+      showGoodJob("Option updated!");
       const payload = { action: "dropdownUpdate", category: cat, oldValue: v, newValue: nv };
       if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
     };
 
-    const del = document.createElement("button");
-    del.className = "text-red-600 text-xs hover:underline"; del.textContent = "Delete";
-    del.onclick = () => {
+    tr.querySelector(".btn-del").onclick = () => {
       if (!confirm(`Delete "${v}"?`)) return;
       state.dropdowns[cat] = state.dropdowns[cat].filter(x => x !== v);
+      if (cat === "donorName") delete state.donorRefMap[v];
       cacheData(); renderDropdownGrid(); refreshEntryDropdowns();
+      showGoodJob("Option deleted!");
       const payload = { action: "dropdownDelete", category: cat, value: v };
       if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); }); else enqueue(payload);
     };
-
-    btns.appendChild(edit); btns.appendChild(del);
-    row.appendChild(span); row.appendChild(btns);
-    grid.appendChild(row);
+    tbody.appendChild(tr);
   });
 }
 
-function refreshEntryDropdowns() {
-  $$("[data-dropdown]").forEach(el => {
-    const key = el.dataset.dropdown;
-    makeDropdown(el, key, state.dropdowns[key] || []);
-  });
-}
-
-/* =====================================================================
-   VIEW SETTINGS
-   ===================================================================== */
+/* ================== SETTINGS & EXPORT ================== */
 function setupSettings() {}
 function renderColumnToggles() {
-  const box = $("#colToggles");
-  box.innerHTML = "";
+  const box = $("#colToggles"); box.innerHTML = "";
   FIELDS.forEach(f => {
-    const lab = document.createElement("label");
-    lab.className = "flex items-center gap-2 text-sm bg-slate-50 px-3 py-2 rounded-lg cursor-pointer";
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = state.columns[f.key] !== false;
-    cb.disabled = f.key === "receiptNo";
-    cb.onchange = () => {
-      state.columns[f.key] = cb.checked;
-      saveColumns();
-      renderRecords();
-      toast("Column visibility saved", "success");
-    };
-    lab.appendChild(cb);
-    lab.appendChild(document.createTextNode(f.label + (f.key === "receiptNo" ? " (locked)" : "")));
-    box.appendChild(lab);
+    const lab = document.createElement("label"); lab.className = "flex items-center gap-2 text-sm bg-slate-50 px-3 py-2 rounded-lg cursor-pointer";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = state.columns[f.key] !== false; cb.disabled = f.key === "receiptNo";
+    cb.onchange = () => { state.columns[f.key] = cb.checked; saveColumns(); renderRecords(); toast("Column visibility saved", "success"); };
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(f.label + (f.key === "receiptNo" ? " (locked)" : ""))); box.appendChild(lab);
   });
 }
 
-/* =====================================================================
-   INIT
-   ===================================================================== */
+function setupExport() {
+  $("#exportExcel").addEventListener("click", () => {
+    const rows = getFilteredData().map(r => { const o = {}; FIELDS.forEach(f => o[f.label] = r[f.key] ?? ""); return o; });
+    if (!rows.length) { toast("No records to export", "warn"); return; }
+    const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Filtered Records");
+    XLSX.writeFile(wb, `DistrictAccount_${todayISO()}.xlsx`);
+    toast("Excel exported ✓", "success");
+  });
+  $("#exportPdf").addEventListener("click", () => {
+    const rows = getFilteredData(); if (!rows.length) { toast("No records to print", "warn"); return; }
+    const html = `<html><head><title>Report</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial;font-size:9px}h1{font-size:14px;margin:0}h2{font-size:10px;color:#555;margin:2px 0 8px;font-weight:normal}table{width:100%;border-collapse:collapse}th{background:#e2e8f0;text-align:left;padding:4px;border:1px solid #cbd5e1}td{padding:3px 4px;border:1px solid #e2e8f0}</style></head><body><h1>District Account ERP</h1><h2>Generated ${new Date().toLocaleString()}</h2><table><thead><tr>${FIELDS.map(c=>`<th>${c.label}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${FIELDS.map(c=>`<td>${esc(r[c.key]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table></body></html>`;
+    const w = window.open("", "_blank"); w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
+  });
+}
+
 initLogin();
 </script>
 </body>
