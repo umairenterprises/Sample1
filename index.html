@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>District Account ERP — Powered by Umair Sajid</title>
+<!-- YAHAN APNA LOGO ADD KAREIN (GitHub mein logo.png upload karein) -->
+<link rel="icon" type="image/png" href="logo.png" />
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -12,16 +15,15 @@
   .sortable:hover { background: #e2e8f0; cursor: pointer; }
   .sidebar-collapsed #sidebar { width: 64px; }
   .sidebar-collapsed #sidebar .nav-label,
-  .sidebar-collapsed #sidebar .brand-text { display: none; }
+  .sidebar-collapsed #sidebar .brand-text,
+  .sidebar-collapsed #sidebar .footer-text { display: none; }
   .sidebar-collapsed #main { margin-left: 64px; }
   #sidebar { transition: width .2s ease; }
   #main { transition: margin-left .2s ease; }
   
-  /* Modern Popup Overlay */
   .popup-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .popup-overlay.show { opacity: 1; pointer-events: auto; }
   
-  /* Circular Check Animation */
   .checkmark-circle { width: 80px; height: 80px; position: relative; display: inline-block; vertical-align: top; }
   .checkmark-circle .background { width: 80px; height: 80px; border-radius: 50%; background: #22c55e; position: absolute; }
   .checkmark-circle .checkmark { position: absolute; display: block; width: 40px; height: 20px; border-left: 4px solid white; border-bottom: 4px solid white; transform: rotate(-45deg); left: 20px; top: 25px; }
@@ -33,7 +35,6 @@
   .inp:focus { box-shadow: 0 0 0 2px #bfdbfe; border-color: #3b82f6; }
   .nav-item.active { background: #2563eb; color: #fff; }
   
-  /* Dropdown Tabs */
   .dd-tab { padding: 8px 16px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; font-size: 0.875rem; border: 1px solid transparent; border-bottom: none; color: #475569; }
   .dd-tab.active { background: white; border-color: #e2e8f0; color: #2563eb; font-weight: 600; }
 </style>
@@ -57,7 +58,6 @@
         <div class="relative">
           <input id="loginPass" type="password" required class="w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <button type="button" id="togglePass" tabindex="-1" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none">
-            <!-- Professional SVG Eye Icon -->
             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             <svg id="eyeSlashIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
           </button>
@@ -80,7 +80,7 @@
       <span class="brand-text font-bold text-white text-sm leading-tight">District<br/>Account ERP</span>
       <button id="collapseBtn" class="text-slate-400 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
     </div>
-    <nav class="flex-1 py-4 space-y-1 text-sm">
+    <nav class="flex-1 py-4 space-y-1 text-sm overflow-y-auto">
       <button data-nav="entry" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         <span class="nav-label">New Entry</span>
@@ -89,11 +89,22 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
         <span class="nav-label">View Records</span>
       </button>
+      
+      <button data-nav="expense" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <span class="nav-label">Expenses</span>
+      </button>
+
+      <button data-nav="ledger" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span class="nav-label">Donor Ledger</span>
+      </button>
+
       <button data-nav="dropdowns" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span class="nav-label">Manage Dropdowns</span>
       </button>
-      <button data-nav="settings" class="nav-item admin-only w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
+      <button data-nav="settings" class="nav-item w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700 text-left transition">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
         <span class="nav-label">View Settings</span>
       </button>
@@ -109,6 +120,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.13-5.88L21 8"></path></svg>
         Sync <span id="queueCount"></span>
       </button>
+      <div class="text-center pt-2 footer-text font-medium text-slate-500">
+        Powered by Umair Sajid
+      </div>
     </div>
   </aside>
 
@@ -121,10 +135,34 @@
           <h2 class="font-bold text-slate-800 text-lg">District Account ERP</h2>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <span id="roleBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Admin</span>
-        <span id="userName" class="text-sm font-medium text-slate-700 hidden sm:inline"></span>
-        <button id="logoutBtn" class="text-sm text-red-600 hover:text-red-800 font-medium transition">Logout</button>
+      
+      <!-- USER PROFILE DROPDOWN -->
+      <div class="flex items-center gap-4 relative">
+        <div class="relative" id="profileMenuContainer">
+          <button id="profileBtn" class="flex items-center gap-3 focus:outline-none group">
+            <div class="text-right hidden sm:block">
+              <div id="userNameDisplay" class="text-sm font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition">Loading...</div>
+              <div id="roleBadge" class="text-xs font-semibold text-slate-500">User</div>
+            </div>
+            <div id="userAvatar" class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg border border-blue-200 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+              U
+            </div>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          
+          <div id="profileDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 hidden z-50">
+            <div class="p-4 border-b border-slate-100 bg-slate-50 rounded-t-xl">
+              <p class="text-sm font-bold text-slate-800" id="dropdownName">Name</p>
+              <p class="text-xs text-slate-500 truncate" id="dropdownEmail">email@example.com</p>
+            </div>
+            <div class="p-2">
+              <button id="logoutBtn" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -164,7 +202,6 @@
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <h2 class="text-xl font-bold text-slate-800">View Records</h2>
           
-          <!-- DATE FILTER & EXPORT -->
           <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
             <span class="text-xs font-semibold text-slate-500 uppercase px-2">Date Range:</span>
             <input type="date" id="filterStartDate" class="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500" title="Start Date">
@@ -176,8 +213,14 @@
             <button id="exportPdf" class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 rounded text-sm font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> PDF</button>
           </div>
         </div>
+
+        <!-- TOTAL UPER -->
+        <div class="px-4 py-3 bg-blue-50 border border-blue-100 rounded-t-xl flex items-center justify-between mb-1">
+          <span class="text-sm font-bold text-blue-800">Total Filtered Amount:</span>
+          <span id="recordsTotalAmount" class="text-lg font-bold text-blue-900">PKR 0</span>
+        </div>
         
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        <div class="bg-white rounded-b-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
           <div class="overflow-x-auto">
             <table class="w-full text-sm whitespace-nowrap" id="recordsTable">
               <thead id="recordsHead" class="bg-slate-50 text-slate-700 border-b border-slate-200"></thead>
@@ -185,7 +228,6 @@
             </table>
           </div>
           
-          <!-- PAGINATION -->
           <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
             <span id="recordsMeta" class="text-xs text-slate-500 font-medium"></span>
             <div class="flex items-center gap-1">
@@ -197,11 +239,106 @@
         </div>
       </section>
 
+      <!-- EXPENSE MODULE -->
+      <section id="view-expense" class="view hidden">
+        <h2 class="text-xl font-bold mb-4 text-slate-800">Expense Entry</h2>
+        <form id="expenseForm" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Date *</label><input name="date" type="date" required class="inp" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Description / Party *</label><input name="desc" required class="inp" placeholder="e.g. Electrician, Rent" /></div>
+          <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Amount *</label><input name="amount" type="number" step="0.01" required class="inp" /></div>
+          
+          <div class="md:col-span-3 flex justify-end mt-2">
+            <button type="submit" class="px-6 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm transition">Save Expense</button>
+          </div>
+        </form>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <h2 class="text-lg font-bold text-slate-800">Expense Records</h2>
+          <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+            <span class="text-xs font-semibold text-slate-500 uppercase px-2">Date Range:</span>
+            <input type="date" id="expenseFilterStart" class="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+            <span class="text-slate-400">to</span>
+            <input type="date" id="expenseFilterEnd" class="text-sm border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+            <button id="clearExpenseFilter" class="text-xs text-red-500 hover:underline px-1">Clear</button>
+          </div>
+        </div>
+
+        <!-- TOTAL UPER EXPENSES -->
+        <div class="px-4 py-3 bg-rose-50 border border-rose-100 rounded-t-xl flex items-center justify-between mb-1">
+          <span class="text-sm font-bold text-rose-800">Total Expenses:</span>
+          <span id="expenseTotalAmount" class="text-lg font-bold text-rose-900">PKR 0</span>
+        </div>
+
+        <div class="bg-white rounded-b-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm whitespace-nowrap">
+              <thead class="bg-slate-50 text-slate-700 border-b border-slate-200">
+                <tr>
+                  <th class="px-4 py-3 text-left font-semibold">Date</th>
+                  <th class="px-4 py-3 text-left font-semibold">Description</th>
+                  <th class="px-4 py-3 text-left font-semibold">Amount</th>
+                  <th class="px-4 py-3 text-left font-semibold">Entered By</th>
+                  <th class="px-4 py-3 text-right font-semibold">Action</th>
+                </tr>
+              </thead>
+              <tbody id="expenseBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- DONOR LEDGER -->
+      <section id="view-ledger" class="view hidden">
+        <h2 class="text-xl font-bold mb-4 text-slate-800">Donor Ledger</h2>
+        
+        <!-- Date Range & PDF & Search -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-wrap items-end gap-4">
+          <div class="w-full max-w-xs">
+            <label class="text-xs font-semibold text-slate-600 mb-1 block">Donor</label>
+            <div data-dropdown="donorName" id="ledgerDonorDD"></div>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600 mb-1 block">Start Date</label>
+            <input type="date" id="ledgerStartDate" class="inp">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600 mb-1 block">End Date</label>
+            <input type="date" id="ledgerEndDate" class="inp">
+          </div>
+          <button id="loadLedgerBtn" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-semibold shadow-sm transition">Generate</button>
+          <button id="exportLedgerPdf" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm transition flex items-center gap-1">🖨 PDF</button>
+        </div>
+
+        <div id="ledgerResults" class="hidden">
+          <!-- TOTAL UPER LEDGER -->
+          <div class="px-4 py-3 bg-indigo-50 border border-indigo-100 rounded-t-xl flex items-center justify-between mb-1">
+            <span class="text-sm font-bold text-indigo-800">Donor Total:</span>
+            <span id="ledgerTotalAmount" class="text-lg font-bold text-indigo-900">PKR 0</span>
+          </div>
+
+          <div class="bg-white rounded-b-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-700 border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3 text-left font-semibold">Date</th>
+                    <th class="px-4 py-3 text-left font-semibold">Donor Name</th>
+                    <th class="px-4 py-3 text-left font-semibold">Head</th>
+                    <th class="px-4 py-3 text-left font-semibold">Sub Head</th>
+                    <th class="px-4 py-3 text-left font-semibold">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- MANAGE DROPDOWNS -->
       <section id="view-dropdowns" class="view hidden">
         <h2 class="text-xl font-bold mb-4 text-slate-800">Manage Dropdowns</h2>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-          <!-- Tabs -->
           <div class="flex overflow-x-auto border-b border-slate-200 bg-slate-50 px-2 pt-2 gap-1">
             <div class="dd-tab active" data-cat="donorName">Donor Name</div>
             <div class="dd-tab" data-cat="reference">Reference C/o</div>
@@ -240,7 +377,7 @@
       <section id="view-settings" class="view hidden">
         <h2 class="text-xl font-bold mb-4 text-slate-800">Column Visibility Settings</h2>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records and PDF Export. (Excel always includes all fields).</p>
+          <p class="text-sm text-slate-500 mb-4">Choose which columns appear in View Records and PDF Export. These settings are saved specifically for your login.</p>
           <div id="colToggles" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
         </div>
       </section>
@@ -272,12 +409,11 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div id="toastBox" class="fixed top-4 right-4 z-[110] space-y-2"></div>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbza1jbPSrpVhCFpegVPeHu-cngjtxmk-eEfUnsOIVvJd6u43XKrhq0BgpCXv8eNots-/exec";
-const LS = { session: "daerp_session", queue: "daerp_queue", columns: "daerp_columns" };
+const LS = { session: "daerp_session", queue: "daerp_queue", columnsPrefix: "daerp_columns_" };
 
 const FIELDS = [
   { key: "date", label: "Date", type: "date" },
@@ -288,7 +424,7 @@ const FIELDS = [
   { key: "subHead", label: "Sub-Head", type: "dropdown" },
   { key: "city", label: "City", type: "dropdown" },
   { key: "donorName", label: "Donor Name", type: "dropdown" },
-  { key: "amount", label: "Amount (PKR)", type: "number" },
+  { key: "amount", label: "Amount", type: "number" },
   { key: "mobile", label: "Donor Mobile", type: "text" },
   { key: "email", label: "Email", type: "email" },
   { key: "reference", label: "Reference C/o", type: "dropdown" },
@@ -301,24 +437,22 @@ const DROPDOWN_LABELS = {
 };
 
 const state = {
-  user: null, data: [], dropdowns: {}, donorRefMap: {},
+  user: null, data: [], expenses: [], dropdowns: {}, donorRefMap: {},
   columns: {}, sort: { key: "date", dir: "desc" },
   colFilters: {}, editingId: null, online: navigator.onLine, 
   activeDDTab: "donorName", ddSortAsc: true,
-  // Pagination State
   currentPage: 1, itemsPerPage: 25,
-  // Date Filter State
-  filterStartDate: "", filterEndDate: ""
+  filterStartDate: "", filterEndDate: "",
+  expenseFilterStart: "", expenseFilterEnd: ""
 };
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-// Date Formatter DD/MM/YYYY
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const parts = String(dateStr).split("-");
-  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; // yyyy-mm-dd to dd/mm/yyyy
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; 
   return dateStr;
 }
 
@@ -339,7 +473,7 @@ function showSuccessPopup(msg = "Action completed successfully.") {
   
   const check = overlay.querySelector(".checkmark");
   check.classList.remove("draw");
-  void check.offsetWidth; // Trigger reflow to restart animation
+  void check.offsetWidth; 
   check.classList.add("draw");
 
   setTimeout(() => { 
@@ -354,14 +488,14 @@ function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;
 
 function loadColumns() {
   try {
-    const saved = JSON.parse(localStorage.getItem(LS.columns));
+    const saved = JSON.parse(localStorage.getItem(LS.columnsPrefix + state.user.username));
     const out = {};
     FIELDS.forEach(f => out[f.key] = saved ? (saved[f.key] !== false) : true);
-    out.receiptNo = true; // Locked
+    out.receiptNo = true; 
     return out;
   } catch { return Object.fromEntries(FIELDS.map(f => [f.key, true])); }
 }
-function saveColumns() { localStorage.setItem(LS.columns, JSON.stringify(state.columns)); }
+function saveColumns() { localStorage.setItem(LS.columnsPrefix + state.user.username, JSON.stringify(state.columns)); }
 
 function queue() { try { return JSON.parse(localStorage.getItem(LS.queue)) || []; } catch { return []; } }
 function setQueue(q) { localStorage.setItem(LS.queue, JSON.stringify(q)); updateQueueBadge(); }
@@ -390,7 +524,7 @@ async function safePost(payload) {
 
 /* ================== AUTH ================== */
 function initLogin() {
-  const saved = localStorage.getItem(LS.session);
+  const saved = localStorage.getItem(LS.session) || sessionStorage.getItem(LS.session);
   if (saved) { try { state.user = JSON.parse(saved); startApp(); return; } catch {} }
   $("#loginModal").classList.remove("hidden");
   
@@ -431,14 +565,20 @@ function initLogin() {
 
 function startApp() {
   $("#loginModal").classList.add("hidden"); $("#app").classList.remove("hidden");
+  
+  const name = state.user.name || state.user.username || "User";
+  $("#userNameDisplay").textContent = name;
+  $("#dropdownName").textContent = name;
+  $("#dropdownEmail").textContent = state.user.email || "";
+  $("#userAvatar").textContent = name.charAt(0).toUpperCase();
   $("#roleBadge").textContent = state.user.role || "User";
-  $("#userName").textContent = state.user.name || state.user.email || "";
+
   if (state.user.role !== "Admin") $$(".admin-only").forEach(el => el.classList.add("hidden"));
   
   state.columns = loadColumns();
   updateQueueBadge(); updateOnlineStatus(); renderColumnToggles();
   fetchData(true);
-  setupNav(); setupEntryForm(); setupRecords(); setupDropdownManager(); setupSettings(); setupSidebar(); setupExport();
+  setupNav(); setupEntryForm(); setupExpenseForm(); setupLedger(); setupRecords(); setupDropdownManager(); setupSettings(); setupSidebar(); setupExport();
   setInterval(() => { if (state.online) flushQueue(); }, 15000);
 }
 
@@ -447,24 +587,13 @@ async function fetchData(showToast = false) {
     const res = await apiGet("bootstrap");
     if (res.ok) {
       state.data = res.data || [];
+      state.expenses = res.expenses || [];
       state.dropdowns = res.dropdowns || {};
       
-      // Build Master Auto-Fill Map
       state.donorRefMap = {};
       const dnList = state.dropdowns.donorName || [];
       const refList = state.dropdowns.reference || [];
-      const mobList = state.dropdowns.mobile || [];
-      const emlList = state.dropdowns.email || [];
-      const refMobList = state.dropdowns.refMobile || [];
-
-      dnList.forEach((dn, i) => { 
-        state.donorRefMap[dn] = {
-          reference: refList[i] || "",
-          mobile: mobList[i] || "",
-          email: emlList[i] || "",
-          refMobile: refMobList[i] || ""
-        };
-      });
+      dnList.forEach((dn, i) => { state.donorRefMap[dn] = refList[i] || ""; });
 
       localStorage.setItem("daerp_users_cache", JSON.stringify(res.users || []));
       renderAll();
@@ -473,8 +602,10 @@ async function fetchData(showToast = false) {
   } catch (e) {
     toast("Offline mode — using cached data", "warn");
     const cachedData = localStorage.getItem("daerp_data_cache");
+    const cachedExp = localStorage.getItem("daerp_exp_cache");
     const cachedDd = localStorage.getItem("daerp_dd_cache");
     if (cachedData) state.data = JSON.parse(cachedData);
+    if (cachedExp) state.expenses = JSON.parse(cachedExp);
     if (cachedDd) state.dropdowns = JSON.parse(cachedDd);
     renderAll();
   }
@@ -482,12 +613,14 @@ async function fetchData(showToast = false) {
 
 function renderAll() {
   renderRecords();
+  renderExpenses();
   renderDropdownGrid();
   refreshEntryDropdowns();
   cacheData();
 }
 function cacheData() {
   localStorage.setItem("daerp_data_cache", JSON.stringify(state.data));
+  localStorage.setItem("daerp_exp_cache", JSON.stringify(state.expenses));
   localStorage.setItem("daerp_dd_cache", JSON.stringify(state.dropdowns));
 }
 
@@ -507,6 +640,7 @@ function setupNav() {
     $$(".nav-item").forEach(b => b.classList.remove("active")); btn.classList.add("active");
     $$(".view").forEach(v => v.classList.add("hidden")); $(`#view-${btn.dataset.nav}`).classList.remove("hidden");
     if (btn.dataset.nav === "records") renderRecords();
+    if (btn.dataset.nav === "expense") renderExpenses();
     if (btn.dataset.nav === "dropdowns") renderDropdownGrid();
   }));
   $('[data-nav="entry"]').click();
@@ -543,7 +677,7 @@ function updateOnlineStatus() {
 window.addEventListener("online", () => { updateOnlineStatus(); flushQueue(); });
 window.addEventListener("offline", updateOnlineStatus);
 
-/* ================== DROPDOWNS (ENTRY FORM) ================== */
+/* ================== DROPDOWNS ================== */
 function makeDropdown(container, key, options, { value = "", onSelect } = {}) {
   container.innerHTML = "";
   const wrap = document.createElement("div"); wrap.className = "relative";
@@ -590,17 +724,13 @@ function setupEntryForm() {
   refreshEntryDropdowns();
   $("#receiptNo").addEventListener("input", checkDuplicate);
 
-  // Master Auto-Fill Logic
   $("#donorDD").addEventListener("change", (e) => {
     if (e.target.tagName === "INPUT") {
       const selectedDonor = e.target.value;
-      const mapData = state.donorRefMap[selectedDonor];
-      if (mapData) {
+      const ref = state.donorRefMap[selectedDonor];
+      if (ref) {
         const refInput = $("#refDD input");
-        if (refInput) { refInput.value = mapData.reference; refInput.dispatchEvent(new Event("change", { bubbles: true })); }
-        $("#mobileInput").value = mapData.mobile;
-        $("#emailInput").value = mapData.email;
-        $("#refMobileInput").value = mapData.refMobile;
+        if (refInput) { refInput.value = ref; refInput.dispatchEvent(new Event("change", { bubbles: true })); }
       }
     }
   });
@@ -619,6 +749,7 @@ function setupEntryForm() {
 
     rec.amount = parseFloat(rec.amount) || 0;
     rec._id = uid(); rec._synced = state.online;
+    rec.EnteredBy = state.user.name || state.user.username;
     if (!rec.date) rec.date = todayISO();
 
     state.data.unshift(rec); cacheData(); renderRecords();
@@ -652,7 +783,156 @@ function checkDuplicate() {
   return !!dup;
 }
 
-/* ================== VIEW RECORDS & PAGINATION ================== */
+/* ================== EXPENSES ================== */
+function setupExpenseForm() {
+  $("#expenseForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const rec = {
+      date: fd.get("date") || todayISO(),
+      desc: (fd.get("desc") || "").trim(),
+      amount: parseFloat(fd.get("amount")) || 0,
+      _id: uid(),
+      EnteredBy: state.user.name || state.user.username
+    };
+
+    state.expenses.unshift(rec); cacheData(); renderExpenses();
+    e.target.reset();
+    showSuccessPopup("Expense saved successfully!");
+
+    const payload = { action: "addExpense", record: rec };
+    if (state.online) safePost(payload).then(res => { if(!res) enqueue(payload); });
+    else enqueue(payload);
+  });
+
+  $("#expenseFilterStart").addEventListener("change", (e) => { state.expenseFilterStart = e.target.value; renderExpenses(); });
+  $("#expenseFilterEnd").addEventListener("change", (e) => { state.expenseFilterEnd = e.target.value; renderExpenses(); });
+  $("#clearExpenseFilter").addEventListener("click", () => {
+    state.expenseFilterStart = ""; state.expenseFilterEnd = "";
+    $("#expenseFilterStart").value = ""; $("#expenseFilterEnd").value = "";
+    renderExpenses();
+  });
+}
+
+function renderExpenses() {
+  const body = $("#expenseBody"); body.innerHTML = "";
+  
+  const filtered = state.expenses.filter(r => {
+    if (state.expenseFilterStart && r.date < state.expenseFilterStart) return false;
+    if (state.expenseFilterEnd && r.date > state.expenseFilterEnd) return false;
+    return true;
+  });
+
+  let total = 0;
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No expenses found.</td></tr>`;
+  } else {
+    filtered.forEach(r => {
+      total += r.amount;
+      const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50 transition-colors";
+      tr.innerHTML = `
+        <td class="px-4 py-2.5 text-slate-700">${formatDate(r.date)}</td>
+        <td class="px-4 py-2.5 font-medium text-slate-800">${esc(r.desc || r.party || "")}</td>
+        <td class="px-4 py-2.5 font-bold text-rose-600">${r.amount}</td>
+        <td class="px-4 py-2.5 text-xs text-slate-500">${esc(r.EnteredBy || "")}</td>
+        <td class="px-4 py-2.5 text-right">
+           <button class="text-blue-600 hover:underline text-xs font-medium mr-3 btn-edit-exp" data-id="${r._id}">Edit</button>
+           <button class="text-red-600 hover:underline text-xs font-medium btn-del-exp" data-id="${r._id}">Delete</button>
+        </td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  $("#expenseTotalAmount").textContent = `PKR ${total.toLocaleString()}`;
+
+  $$(".btn-edit-exp").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.id;
+      const rec = state.expenses.find(x => x._id === id);
+      if(!rec) return;
+      
+      const newDesc = prompt("Edit Description:", rec.desc || rec.party);
+      if(newDesc === null) return;
+      const newAmount = prompt("Edit Amount:", rec.amount);
+      if(newAmount === null || isNaN(newAmount)) return;
+      
+      rec.desc = newDesc;
+      rec.amount = parseFloat(newAmount);
+      cacheData(); renderExpenses(); showSuccessPopup("Expense updated!");
+      
+      const payload = { action: "updateExpense", record: rec };
+      if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
+      else enqueue(payload);
+    };
+  });
+
+  $$(".btn-del-exp").forEach(btn => {
+    btn.onclick = () => {
+      if (!confirm("Delete this expense?")) return;
+      const id = btn.dataset.id;
+      state.expenses = state.expenses.filter(x => x._id !== id);
+      cacheData(); renderExpenses(); showSuccessPopup("Expense deleted!");
+      const payload = { action: "deleteExpense", id: id };
+      if (state.online) safePost(payload).then(r => { if (!r) enqueue(payload); });
+      else enqueue(payload);
+    };
+  });
+}
+
+/* ================== DONOR LEDGER ================== */
+function setupLedger() {
+  const ddContainer = $("#ledgerDonorDD");
+  makeDropdown(ddContainer, "donorName", state.dropdowns.donorName || []);
+
+  $("#loadLedgerBtn").addEventListener("click", () => {
+    const donorName = ddContainer.querySelector("input").value.trim();
+    const start = $("#ledgerStartDate").value;
+    const end = $("#ledgerEndDate").value;
+    
+    if (!donorName) { toast("Please select a donor", "warn"); return; }
+    
+    $("#ledgerResults").classList.remove("hidden");
+    const body = $("#ledgerBody"); body.innerHTML = "";
+    
+    let records = state.data.filter(r => String(r.donorName).toLowerCase() === donorName.toLowerCase());
+    if (start) records = records.filter(r => r.date >= start);
+    if (end) records = records.filter(r => r.date <= end);
+    
+    let total = 0;
+    if (!records.length) {
+      body.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No records found.</td></tr>`;
+    } else {
+      records.forEach(r => {
+        total += Number(r.amount) || 0;
+        const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50 transition-colors";
+        tr.innerHTML = `
+          <td class="px-4 py-2.5 text-slate-700">${formatDate(r.date)}</td>
+          <td class="px-4 py-2.5 font-medium text-slate-800">${esc(r.donorName)}</td>
+          <td class="px-4 py-2.5 text-slate-600">${esc(r.headDept)}</td>
+          <td class="px-4 py-2.5 text-slate-600">${esc(r.subHead)}</td>
+          <td class="px-4 py-2.5 font-bold text-blue-600">${r.amount}</td>`;
+        body.appendChild(tr);
+      });
+    }
+    $("#ledgerTotalAmount").textContent = `PKR ${total.toLocaleString()}`;
+  });
+
+  $("#exportLedgerPdf").addEventListener("click", () => {
+    const donorName = ddContainer.querySelector("input").value.trim();
+    const rows = [...$("#ledgerBody").querySelectorAll("tr")];
+    if (!donorName || rows.length === 0 || rows[0].innerText.includes("No records")) { toast("Generate data first", "warn"); return; }
+    
+    let html = `<html><head><title>Ledger</title><style>body{font-family:Arial;font-size:12px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#f1f5f9;}</style></head><body>
+      <h2>Donor Ledger: ${donorName}</h2><table><thead><tr><th>Date</th><th>Donor</th><th>Head</th><th>Sub Head</th><th>Amount</th></tr></thead><tbody>`;
+    
+    rows.forEach(tr => { html += tr.outerHTML; });
+    html += `</tbody></table><h3>Total: ${$("#ledgerTotalAmount").textContent}</h3></body></html>`;
+    
+    const w = window.open("", "_blank"); w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 500);
+  });
+}
+
+/* ================== VIEW RECORDS ================== */
 function setupRecords() {
   $("#recordsHead").addEventListener("click", (e) => {
     const th = e.target.closest("th[data-sort]"); if (!th) return;
@@ -680,10 +960,8 @@ function setupRecords() {
 function getFilteredData() {
   const f = state.colFilters;
   return state.data.filter(r => {
-    // Date Range Filter
     if (state.filterStartDate && r.date < state.filterStartDate) return false;
     if (state.filterEndDate && r.date > state.filterEndDate) return false;
-    // Column Filters
     return Object.entries(f).every(([k, v]) => {
       if (!v) return true;
       return String(r[k] ?? "").toLowerCase().includes(v.toLowerCase());
@@ -740,7 +1018,9 @@ function renderRecordsBodyOnly() {
     return 0;
   });
 
-  // Pagination logic
+  const totalAmt = allRows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  $("#recordsTotalAmount").textContent = `PKR ${totalAmt.toLocaleString()}`;
+
   const total = allRows.length;
   const totalPages = Math.ceil(total / state.itemsPerPage) || 1;
   if (state.currentPage > totalPages) state.currentPage = totalPages;
@@ -770,14 +1050,12 @@ function renderRecordsBodyOnly() {
     });
   }
 
-  // Update Pagination UI
   $("#recordsMeta").textContent = `Showing ${total === 0 ? 0 : startIdx + 1} to ${Math.min(startIdx + state.itemsPerPage, total)} of ${total} records`;
   $("#pageInfo").textContent = `Page ${state.currentPage} of ${totalPages}`;
   $("#prevPage").prop("disabled", state.currentPage === 1);
   $("#nextPage").prop("disabled", state.currentPage === totalPages);
 }
 
-// jQuery-less prop helper
 Element.prototype.prop = function(prop, val) { if(val !== undefined) this[prop] = val; return this[prop]; };
 
 function openEdit(rec) {
@@ -855,9 +1133,6 @@ function setupDropdownManager() {
         state.dropdowns["reference"] = state.dropdowns["reference"] || [];
         state.dropdowns["reference"].push(refVal);
         safePost({ action: "dropdownAdd", category: "reference", value: refVal });
-        
-        const mobVal = prompt(`Enter Mobile Number for "${val}":`);
-        if(mobVal) { state.dropdowns["mobile"] = state.dropdowns["mobile"] || []; state.dropdowns["mobile"].push(mobVal); safePost({ action: "dropdownAdd", category: "mobile", value: mobVal }); }
       }
     }
 
@@ -919,13 +1194,12 @@ function renderColumnToggles() {
   FIELDS.forEach(f => {
     const lab = document.createElement("label"); lab.className = "flex items-center gap-2 text-sm bg-slate-50 px-3 py-2 rounded-lg cursor-pointer border border-slate-200 hover:bg-slate-100 transition";
     const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = state.columns[f.key] !== false; cb.disabled = f.key === "receiptNo"; cb.className="rounded text-blue-600 focus:ring-blue-500";
-    cb.onchange = () => { state.columns[f.key] = cb.checked; saveColumns(); renderRecords(); toast("Column visibility saved", "success"); };
+    cb.onchange = () => { state.columns[f.key] = cb.checked; saveColumns(); renderRecords(); toast("Column visibility saved for your profile", "success"); };
     lab.appendChild(cb); lab.appendChild(document.createTextNode(f.label + (f.key === "receiptNo" ? " (Locked)" : ""))); box.appendChild(lab);
   });
 }
 
 function setupExport() {
-  // Excel Export (ALL DATA, Formatted DD/MM/YYYY)
   $("#exportExcel").addEventListener("click", () => {
     const rows = getFilteredData().map(r => { 
       const o = {}; 
@@ -939,12 +1213,13 @@ function setupExport() {
     toast("Excel exported successfully", "success");
   });
 
-  // PDF Export (ONLY VISIBLE COLUMNS, PROPER ALIGNMENT)
   $("#exportPdf").addEventListener("click", () => {
     const rows = getFilteredData(); 
     if (!rows.length) { toast("No records to print", "warn"); return; }
     
     const visibleCols = FIELDS.filter(f => state.columns[f.key]);
+    let totalAmt = 0;
+    rows.forEach(r => totalAmt += Number(r.amount) || 0);
     
     const html = `
       <html><head><title>District Account ERP Report</title>
@@ -957,6 +1232,7 @@ function setupExport() {
         th { background: #f8fafc; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; font-weight: 600; color: #334155; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;}
         td { padding: 6px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
         tr:nth-child(even) { background-color: #fcfcfc; }
+        .total-row { background: #f1f5f9; font-weight: bold; font-size: 11px; }
       </style></head><body>
       <h1>District Account ERP - Financial Ledger</h1>
       <div class="meta">
@@ -965,6 +1241,7 @@ function setupExport() {
       </div>
       <table><thead><tr>${visibleCols.map(c => `<th>${c.label}</th>`).join("")}</tr></thead>
       <tbody>${rows.map(r => `<tr>${visibleCols.map(c => `<td>${esc(c.type === "date" ? formatDate(r[c.key]) : (r[c.key] ?? ""))}</td>`).join("")}</tr>`).join("")}</tbody>
+      <tfoot><tr class="total-row"><td colspan="${visibleCols.length - 1}" style="text-align:right; padding-right:15px;">Total Amount:</td><td>PKR ${totalAmt.toLocaleString()}</td></tr></tfoot>
       </table></body></html>`;
       
     const w = window.open("", "_blank"); 
